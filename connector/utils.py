@@ -1,46 +1,45 @@
 import requests
 import json
 import datetime
-import os,sys
+import os, sys
 from abc import abstractmethod
 from connectors.core.connector import get_logger, ConnectorError
 from .constants import LOGGER_NAME
+
 IS_PY3 = sys.version_info[0] == 3
 
 STRING_TYPES = (str, bytes)  # type: ignore
 STRING_OBJ_TYPES = (str,)
 
 
-
-
 logger = get_logger(LOGGER_NAME)
 
 
-def invoke_rest_endpoint(config, endpoint, method='GET', data=None, headers=None):
+def invoke_rest_endpoint(config, endpoint, method="GET", data=None, headers=None):
     if headers is None:
-        headers = {'accept': 'application/json'}
+        headers = {"accept": "application/json"}
 
     # utility function for a sample rest based integration using basic authentication
     # change as required for the specific integration being built
 
-    server_address = config.get('server_address')
-    port = config.get('port', '443')
-    username = config.get('username')
-    password = config.get('password')
-    protocol = config.get('protocol', 'https')
-    verify_ssl = config.get('verify_ssl', True)
+    server_address = config.get("server_address")
+    port = config.get("port", "443")
+    username = config.get("username")
+    password = config.get("password")
+    protocol = config.get("protocol", "https")
+    verify_ssl = config.get("verify_ssl", True)
     if not server_address or not username or not password:
-        raise ConnectorError('Missing required parameters')
-    url = '{protocol}://{server_address}:{port}{endpoint}'.format(protocol=protocol.lower(),
-                                                                  server_address=server_address,
-                                                                  port=port,
-                                                                  endpoint=endpoint)
+        raise ConnectorError("Missing required parameters")
+    url = "{protocol}://{server_address}:{port}{endpoint}".format(
+        protocol=protocol.lower(), server_address=server_address, port=port, endpoint=endpoint
+    )
     try:
-        response = requests.request(method, url, auth=(username, password), verify=verify_ssl,
-                                    data=json.dumps(data), headers=headers)
+        response = requests.request(
+            method, url, auth=(username, password), verify=verify_ssl, data=json.dumps(data), headers=headers
+        )
     except Exception as e:
-        logger.exception('Error invoking endpoint: {0}'.format(endpoint))
-        raise ConnectorError('Error: {0}'.format(str(e)))
+        logger.exception("Error invoking endpoint: {0}".format(endpoint))
+        raise ConnectorError("Error: {0}".format(str(e)))
     if response.ok:
         return response.json()
     else:
@@ -49,6 +48,7 @@ def invoke_rest_endpoint(config, endpoint, method='GET', data=None, headers=None
 
 
 STRING_TYPES = (str, bytes)  # type: ignore
+
 
 def create_clickable_url(url, text=None):
     """
@@ -68,10 +68,11 @@ def create_clickable_url(url, text=None):
         return None
     elif isinstance(url, list):
         if isinstance(text, list):
-            assert len(url) == len(text), 'The URL list and the text list must be the same length.'
-            return ['[{}]({})'.format(text, item) for text, item in zip(text, url)]
-        return ['[{}]({})'.format(item, item) for item in url]
-    return '[{}]({})'.format(text or url, url)
+            assert len(url) == len(text), "The URL list and the text list must be the same length."
+            return ["[{}]({})".format(text, item) for text, item in zip(text, url)]
+        return ["[{}]({})".format(item, item) for item in url]
+    return "[{}]({})".format(text or url, url)
+
 
 def url_to_clickable_markdown(data, url_keys):
     """
@@ -91,25 +92,29 @@ def url_to_clickable_markdown(data, url_keys):
         data = [url_to_clickable_markdown(item, url_keys) for item in data]
 
     elif isinstance(data, dict):
-        data = {key: create_clickable_url(value) if key in url_keys else url_to_clickable_markdown(data[key], url_keys)
-                for key, value in data.items()}
+        data = {
+            key: create_clickable_url(value) if key in url_keys else url_to_clickable_markdown(data[key], url_keys)
+            for key, value in data.items()
+        }
 
     return data
-def argToList(arg, separator=',', transform=None):
+
+
+def argToList(arg, separator=",", transform=None):
     """
-        Converts a string representation of args to a python list
+    Converts a string representation of args to a python list
 
-        :type arg: ``str`` or ``list``
-        :param arg: Args to be converted (required)
+    :type arg: ``str`` or ``list``
+    :param arg: Args to be converted (required)
 
-        :type separator: ``str``
-        :param separator: A string separator to separate the strings, the default is a comma.
+    :type separator: ``str``
+    :param separator: A string separator to separate the strings, the default is a comma.
 
-        :type transform: ``callable``
-        :param transform: A function transformer to transfer the returned list arguments.
+    :type transform: ``callable``
+    :param transform: A function transformer to transfer the returned list arguments.
 
-        :return: A python list of args
-        :rtype: ``list``
+    :return: A python list of args
+    :rtype: ``list``
     """
     if not arg:
         return []
@@ -119,12 +124,12 @@ def argToList(arg, separator=',', transform=None):
         result = arg
     elif isinstance(arg, STRING_TYPES):
         is_comma_separated = True
-        if arg[0] == '[' and arg[-1] == ']':
+        if arg[0] == "[" and arg[-1] == "]":
             try:
                 result = json.loads(arg)
                 is_comma_separated = False
             except Exception:
-                logger.debug('Failed to load {} as JSON, trying to split'.format(arg))  # type: ignore[str-bytes-safe]
+                logger.debug("Failed to load {} as JSON, trying to split".format(arg))  # type: ignore[str-bytes-safe]
         if is_comma_separated:
             result = [s.strip() for s in arg.split(separator)]
     else:
@@ -135,70 +140,75 @@ def argToList(arg, separator=',', transform=None):
 
     return result
 
+
 MARKDOWN_CHARS = r"\`*_{}[]()#+-!|"
+
+
 def stringEscapeMD(st, minimal_escaping=False, escape_multiline=False):
     """
-        Escape any chars that might break a markdown string
+    Escape any chars that might break a markdown string
 
-        :type st: ``str``
-        :param st: The string to be modified (required)
+    :type st: ``str``
+    :param st: The string to be modified (required)
 
-        :type minimal_escaping: ``bool``
-        :param minimal_escaping: Whether replace all special characters or table format only (optional)
+    :type minimal_escaping: ``bool``
+    :param minimal_escaping: Whether replace all special characters or table format only (optional)
 
-        :type escape_multiline: ``bool``
-        :param escape_multiline: Whether convert line-ending characters (optional)
+    :type escape_multiline: ``bool``
+    :param escape_multiline: Whether convert line-ending characters (optional)
 
-        :return: A modified string
-        :rtype: ``str``
+    :return: A modified string
+    :rtype: ``str``
     """
     if escape_multiline:
-        st = st.replace('\r\n', '<br>')  # Windows
-        st = st.replace('\r', '<br>')  # old Mac
-        st = st.replace('\n', '<br>')  # Unix
+        st = st.replace("\r\n", "<br>")  # Windows
+        st = st.replace("\r", "<br>")  # old Mac
+        st = st.replace("\n", "<br>")  # Unix
 
     if minimal_escaping:
-        for c in ('|', '`'):
-            st = st.replace(c, '\\' + c)
+        for c in ("|", "`"):
+            st = st.replace(c, "\\" + c)
     else:
         st = "".join(["\\" + str(c) if c in MARKDOWN_CHARS else str(c) for c in st])
 
     return st
 
+
 def formatCell(data, is_pretty=True, json_transform=None):
     """
-        Convert a given object to md while decending multiple levels
+    Convert a given object to md while decending multiple levels
 
 
-        :type data: ``str`` or ``list`` or ``dict``
-        :param data: The cell content (required)
+    :type data: ``str`` or ``list`` or ``dict``
+    :param data: The cell content (required)
 
-        :type is_pretty: ``bool``
-        :param is_pretty: Should cell content be prettified (default is True)
+    :type is_pretty: ``bool``
+    :param is_pretty: Should cell content be prettified (default is True)
 
-        :type json_transform: ``JsonTransformer``
-        :param json_transform: The Json transform object to transform the data
+    :type json_transform: ``JsonTransformer``
+    :param json_transform: The Json transform object to transform the data
 
-        :return: The formatted cell content as a string
-        :rtype: ``str``
+    :return: The formatted cell content as a string
+    :rtype: ``str``
     """
     if json_transform is None:
         json_transform = JsonTransformer(flatten=True)
 
     return json_transform.json_to_str(data, is_pretty)
 
+
 def flattenCell(data, is_pretty=True):
     """
-        Flattens a markdown table cell content into a single string
+    Flattens a markdown table cell content into a single string
 
-        :type data: ``str`` or ``list``
-        :param data: The cell content (required)
+    :type data: ``str`` or ``list``
+    :param data: The cell content (required)
 
-        :type is_pretty: ``bool``
-        :param is_pretty: Should cell content be pretified (default is True)
+    :type is_pretty: ``bool``
+    :param is_pretty: Should cell content be pretified (default is True)
 
-        :return: A sting representation of the cell content
-        :rtype: ``str``
+    :return: A sting representation of the cell content
+    :rtype: ``str``
     """
     indent = 4 if is_pretty else None
     if isinstance(data, STRING_TYPES):
@@ -207,23 +217,26 @@ def flattenCell(data, is_pretty=True):
         string_list = []
         for d in data:
             try:
-                string_list.append(d.decode('utf-8'))
+                string_list.append(d.decode("utf-8"))
             except UnicodeEncodeError:
-                string_list.append(d.encode('utf-8'))
+                string_list.append(d.encode("utf-8"))
 
-        return ',\n'.join(string_list)
+        return ",\n".join(string_list)
     else:
         return json.dumps(data, indent=indent, ensure_ascii=False, default=str)
+
+
 class EntryFormat(object):
     """
     Enum: contains all the entry formats (e.g. HTML, TABLE, JSON, etc.)
     """
-    HTML = 'html'
-    TABLE = 'table'
-    JSON = 'json'
-    TEXT = 'text'
-    DBOT_RESPONSE = 'dbotCommandResponse'
-    MARKDOWN = 'markdown'
+
+    HTML = "html"
+    TABLE = "table"
+    JSON = "json"
+    TEXT = "text"
+    DBOT_RESPONSE = "dbotCommandResponse"
+    MARKDOWN = "markdown"
 
     @classmethod
     def is_valid_type(cls, _type):
@@ -234,14 +247,17 @@ class EntryFormat(object):
             EntryFormat.JSON,
             EntryFormat.TEXT,
             EntryFormat.MARKDOWN,
-            EntryFormat.DBOT_RESPONSE
+            EntryFormat.DBOT_RESPONSE,
         )
+
+
 class EntryType(object):
     """
     Enum: contains all the entry types (e.g. NOTE, ERROR, WARNING, FILE, etc.)
     :return: None
     :rtype: ``None``
     """
+
     NOTE = 1
     DOWNLOAD_AGENT = 2
     FILE = 3
@@ -328,33 +344,36 @@ class CommandResults:
     :rtype: ``None``
     """
 
-    def __init__(self, outputs_prefix=None,
-                outputs_key_field=None,
-                outputs=None,
-                indicators=None,
-                readable_output=None,
-                raw_response=None,
-                indicators_timeline=None,
-                indicator=None,
-                ignore_auto_extract=False,
-                mark_as_note=False,
-                tags=None,
-                scheduled_command=None,
-                relationships=None,
-                entry_type=None,
-                content_format=None,
-                execution_metrics=None,
-                replace_existing=False):
+    def __init__(
+        self,
+        outputs_prefix=None,
+        outputs_key_field=None,
+        outputs=None,
+        indicators=None,
+        readable_output=None,
+        raw_response=None,
+        indicators_timeline=None,
+        indicator=None,
+        ignore_auto_extract=False,
+        mark_as_note=False,
+        tags=None,
+        scheduled_command=None,
+        relationships=None,
+        entry_type=None,
+        content_format=None,
+        execution_metrics=None,
+        replace_existing=False,
+    ):
         # type: (str, object, object, list, str, object, IndicatorsTimeline, Common.Indicator, bool, bool, List[str], ScheduledCommand, list, int, str, List[Any], bool) -> None  # noqa: E501
         if raw_response is None:
             raw_response = outputs
         if outputs is not None:
             if not isinstance(outputs, dict) and not outputs_prefix:
-                raise ConnectorError('outputs_prefix is missing')
-            if outputs_prefix == '.':
-                raise ConnectorError('outputs_prefix cannot be a period.')
+                raise ConnectorError("outputs_prefix is missing")
+            if outputs_prefix == ".":
+                raise ConnectorError("outputs_prefix cannot be a period.")
         if indicators and indicator:
-            raise ConnectorError('indicators is DEPRECATED, use only indicator')
+            raise ConnectorError("indicators is DEPRECATED, use only indicator")
         if entry_type is None:
             entry_type = EntryType.NOTE
 
@@ -375,7 +394,7 @@ class CommandResults:
         elif isinstance(outputs_key_field, list):
             self._outputs_key_field = outputs_key_field
         else:
-            raise ConnectorError('outputs_key_field must be of type str or list')
+            raise ConnectorError("outputs_key_field must be of type str or list")
 
         self.outputs = outputs
         self.raw_response = raw_response
@@ -390,7 +409,7 @@ class CommandResults:
         self.replace_existing = replace_existing
 
         if content_format is not None and not EntryFormat.is_valid_type(content_format):
-            raise ConnectorError('content_format {} is invalid, see CommonServerPython.EntryFormat'.format(content_format))
+            raise ConnectorError("content_format {} is invalid, see CommonServerPython.EntryFormat".format(content_format))
         self.content_format = content_format
 
     def to_context(self):
@@ -435,19 +454,20 @@ class CommandResults:
             if not self.readable_output:
                 # if markdown is not provided then create table by default
                 if isinstance(self.outputs, (dict, list)):
-                    human_readable = tableToMarkdown('Results', self.outputs)
+                    human_readable = tableToMarkdown("Results", self.outputs)
                 else:
                     human_readable = self.outputs  # type: ignore[assignment]
             if self.outputs_prefix and self.replace_existing:
-                next_token_path, _, next_token_key = self.outputs_prefix.rpartition('.')
+                next_token_path, _, next_token_key = self.outputs_prefix.rpartition(".")
                 if not next_token_path:
-                    raise ConnectorError('outputs_prefix must be a nested path to replace an existing key.')
-                outputs[next_token_path + '(true)'] = {next_token_key: self.outputs}
+                    raise ConnectorError("outputs_prefix must be a nested path to replace an existing key.")
+                outputs[next_token_path + "(true)"] = {next_token_key: self.outputs}
             elif self.outputs_prefix and self._outputs_key_field:
                 # if both prefix and key field provided then create DT key
-                formatted_outputs_key = ' && '.join(['val.{0} && val.{0} == obj.{0}'.format(key_field)
-                                                    for key_field in self._outputs_key_field])
-                outputs_key = '{0}({1})'.format(self.outputs_prefix, formatted_outputs_key)
+                formatted_outputs_key = " && ".join(
+                    ["val.{0} && val.{0} == obj.{0}".format(key_field) for key_field in self._outputs_key_field]
+                )
+                outputs_key = "{0}({1})".format(self.outputs_prefix, formatted_outputs_key)
                 outputs[outputs_key] = self.outputs
             elif self.outputs_prefix:
                 outputs[str(self.outputs_prefix)] = self.outputs
@@ -468,29 +488,30 @@ class CommandResults:
         if self.execution_metrics:
             exec_metrics = self.execution_metrics
             self.entry_type = EntryType.EXECUTION_METRICS
-            raw_response = 'Metrics reported successfully.'
+            raw_response = "Metrics reported successfully."
             content_format = EntryFormat.TEXT
         return_entry = {
-            'Type': self.entry_type,
-            'ContentsFormat': content_format,
-            'Contents': raw_response,
-            'HumanReadable': human_readable,
-            'EntryContext': outputs,
-            'IndicatorTimeline': indicators_timeline,
-            'IgnoreAutoExtract': bool(ignore_auto_extract),
-            'Note': mark_as_note,
-            'Relationships': relationships
+            "Type": self.entry_type,
+            "ContentsFormat": content_format,
+            "Contents": raw_response,
+            "HumanReadable": human_readable,
+            "EntryContext": outputs,
+            "IndicatorTimeline": indicators_timeline,
+            "IgnoreAutoExtract": bool(ignore_auto_extract),
+            "Note": mark_as_note,
+            "Relationships": relationships,
         }
         if tags:
             # This is for backward compatibility reasons
-            return_entry['Tags'] = tags
+            return_entry["Tags"] = tags
         if self.scheduled_command:
             return_entry.update(self.scheduled_command.to_results())
 
         if exec_metrics:
-            return_entry.update({'APIExecutionMetrics': exec_metrics})
+            return_entry.update({"APIExecutionMetrics": exec_metrics})
 
         return return_entry
+
 
 class JsonTransformer:
     """
@@ -543,14 +564,15 @@ class JsonTransformer:
         if self.flatten:
             if not isinstance(json_input, dict):
                 return flattenCell(json_input, is_pretty)
-            return '\n'.join(
-                [u'{key}: {val}'.format(key=k, val=flattenCell(v, is_pretty)) for k, v in json_input.items()])  # for BC
+            return "\n".join(
+                ["{key}: {val}".format(key=k, val=flattenCell(v, is_pretty)) for k, v in json_input.items()]
+            )  # for BC
 
         str_lst = []
         prev_path = []  # type: ignore
         for path, key, val in self.json_to_path_generator(json_input):
-            str_path = ''
-            full_tabs = '\t' * len(path)
+            str_path = ""
+            full_tabs = "\t" * len(path)
             if path != prev_path:  # need to construct tha `path` string only of it changed from the last one
                 common_prefix_index = len(os.path.commonprefix((prev_path, path)))  # type: ignore
                 path_suffix = path[common_prefix_index:]
@@ -558,20 +580,21 @@ class JsonTransformer:
                 str_path_lst = []
                 for i, p in enumerate(path_suffix):
                     is_list = isinstance(p, int)
-                    tabs = (common_prefix_index + i) * '\t'
-                    path_value = p if not is_list else '-'
-                    delim = ':\n' if not is_list else ''
-                    str_path_lst.append('{tabs}**{path_value}**{delim}'.format(tabs=tabs, path_value=path_value, delim=delim))
-                str_path = ''.join(str_path_lst)
+                    tabs = (common_prefix_index + i) * "\t"
+                    path_value = p if not is_list else "-"
+                    delim = ":\n" if not is_list else ""
+                    str_path_lst.append("{tabs}**{path_value}**{delim}".format(tabs=tabs, path_value=path_value, delim=delim))
+                str_path = "".join(str_path_lst)
                 prev_path = path
                 if path and isinstance(path[-1], int):
                     # if it is a beginning of a list, there is only one tab left
-                    full_tabs = '\t'
+                    full_tabs = "\t"
 
             str_lst.append(
-                '{path}{tabs}***{key}***: {val}'.format(path=str_path, tabs=full_tabs, key=key, val=flattenCell(val, is_pretty)))
+                "{path}{tabs}***{key}***: {val}".format(path=str_path, tabs=full_tabs, key=key, val=flattenCell(val, is_pretty))
+            )
 
-        return '\n'.join(str_lst)
+        return "\n".join(str_lst)
 
     def json_to_path_generator(self, json_input, path=None):
         """
@@ -604,67 +627,79 @@ class JsonTransformer:
         if isinstance(json_input, list):
             if not json_input or (not isinstance(json_input[0], list) and not isinstance(json_input[0], dict)):
                 # if the items of the lists are primitive, put the values in one line
-                yield path, 'values', ', '.join(json_input)
+                yield path, "values", ", ".join(json_input)
             else:
                 for i, item in enumerate(json_input):
                     for res in self.json_to_path_generator(item, path + [i]):  # this is yield from for python2 BC
                         yield res
 
-def tableToMarkdown(name, t, headers=None, headerTransform=None, removeNull=False, metadata=None, url_keys=None,
-                      date_fields=None, json_transform_mapping=None, is_auto_json_transform=False, sort_headers=True):
+
+def tableToMarkdown(
+    name,
+    t,
+    headers=None,
+    headerTransform=None,
+    removeNull=False,
+    metadata=None,
+    url_keys=None,
+    date_fields=None,
+    json_transform_mapping=None,
+    is_auto_json_transform=False,
+    sort_headers=True,
+):
     """
-        Converts a demisto table in JSON form to a Markdown table
+    Converts a demisto table in JSON form to a Markdown table
 
-        :type name: ``str``
-        :param name: The name of the table (required)
+    :type name: ``str``
+    :param name: The name of the table (required)
 
-        :type t: ``dict`` or ``list``
-        :param t: The JSON table - List of dictionaries with the same keys or a single dictionary (required)
+    :type t: ``dict`` or ``list``
+    :param t: The JSON table - List of dictionaries with the same keys or a single dictionary (required)
 
-        :type headers: ``list`` or ``string``
-        :param headers: A list of headers to be presented in the output table (by order). If string will be passed
-            then table will have single header. Default will include all available headers.
+    :type headers: ``list`` or ``string``
+    :param headers: A list of headers to be presented in the output table (by order). If string will be passed
+        then table will have single header. Default will include all available headers.
 
-        :type headerTransform: ``function``
-        :param headerTransform: A function that formats the original data headers (optional)
+    :type headerTransform: ``function``
+    :param headerTransform: A function that formats the original data headers (optional)
 
-        :type removeNull: ``bool``
-        :param removeNull: Remove empty columns from the table. Default is False
+    :type removeNull: ``bool``
+    :param removeNull: Remove empty columns from the table. Default is False
 
-        :type metadata: ``str``
-        :param metadata: Metadata about the table contents
+    :type metadata: ``str``
+    :param metadata: Metadata about the table contents
 
-        :type url_keys: ``list``
-        :param url_keys: a list of keys in the given JSON table that should be turned in to clickable
+    :type url_keys: ``list``
+    :param url_keys: a list of keys in the given JSON table that should be turned in to clickable
 
-        :type date_fields: ``list``
-        :param date_fields: A list of date fields to format the value to human-readable output.
+    :type date_fields: ``list``
+    :param date_fields: A list of date fields to format the value to human-readable output.
 
-        :type json_transform_mapping: ``Dict[str, JsonTransformer]``
-        :param json_transform_mapping: A mapping between a header key to corresponding JsonTransformer
+    :type json_transform_mapping: ``Dict[str, JsonTransformer]``
+    :param json_transform_mapping: A mapping between a header key to corresponding JsonTransformer
 
-        :type is_auto_json_transform: ``bool``
-        :param is_auto_json_transform: Boolean to try to auto transform complex json
+    :type is_auto_json_transform: ``bool``
+    :param is_auto_json_transform: Boolean to try to auto transform complex json
 
-        :type sort_headers: ``bool``
-        :param sort_headers: Sorts the table based on its headers only if the headers parameter is not specified
+    :type sort_headers: ``bool``
+    :param sort_headers: Sorts the table based on its headers only if the headers parameter is not specified
 
-        :return: A string representation of the markdown table
-        :rtype: ``str``
+    :return: A string representation of the markdown table
+    :rtype: ``str``
     """
     # Turning the urls in the table to clickable
     if url_keys:
         t = url_to_clickable_markdown(t, url_keys)
 
-    mdResult = ''
+    mdResult = ""
     if name:
-        mdResult = '### ' + name + '\n'
+        mdResult = "### " + name + "\n"
 
     if metadata:
-        mdResult += metadata + '\n'
+        mdResult += metadata + "\n"
 
     if not t or len(t) == 0:
-        mdResult += '**No entries.**\n'
+        mdResult += "**No entries.**\n"
         return mdResult
 
     if not headers and isinstance(t, dict) and len(t.keys()) == 1:
@@ -696,93 +731,109 @@ def tableToMarkdown(name, t, headers=None, headerTransform=None, removeNull=Fals
     if removeNull:
         headers_aux = headers[:]
         for header in headers:
-            if all(obj.get(header) in ('', None, [], {}) for obj in t):
+            if all(obj.get(header) in ("", None, [], {}) for obj in t):
                 headers_aux.remove(header)
         headers = headers_aux
 
     if not json_transform_mapping:
-        json_transform_mapping = {header: JsonTransformer(flatten=not is_auto_json_transform) for header in
-                                headers}
+        json_transform_mapping = {header: JsonTransformer(flatten=not is_auto_json_transform) for header in headers}
 
     if t and len(headers) > 0:
         newHeaders = []
         if headerTransform is None:  # noqa
-            def headerTransform(s): return stringEscapeMD(s, True, True)  # noqa
+
+            def headerTransform(s):
+                return stringEscapeMD(s, True, True)  # noqa
+
         for header in headers:
             newHeaders.append(headerTransform(header))
-        mdResult += '|'
+        mdResult += "|"
         if len(newHeaders) == 1:
             mdResult += newHeaders[0]
         else:
-            mdResult += '|'.join(newHeaders)
-        mdResult += '|\n'
-        sep = '---'
-        mdResult += '|' + '|'.join([sep] * len(headers)) + '|\n'
+            mdResult += "|".join(newHeaders)
+        mdResult += "|\n"
+        sep = "---"
+        mdResult += "|" + "|".join([sep] * len(headers)) + "|\n"
         for entry in t:
             entry_copy = entry.copy()
             if date_fields:
                 for field in date_fields:
                     try:
-                        entry_copy[field] = datetime.datetime.fromtimestamp(int(entry_copy[field]) / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                        entry_copy[field] = datetime.datetime.fromtimestamp(int(entry_copy[field]) / 1000).strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
                     except Exception:
                         pass
 
-            vals = [stringEscapeMD((formatCell(entry_copy.get(h, ''), False,
-                                                json_transform_mapping.get(h)) if entry_copy.get(h) is not None else ''),
-                                    True, True) for h in headers]
+            vals = [
+                stringEscapeMD(
+                    (
+                        formatCell(entry_copy.get(h, ""), False, json_transform_mapping.get(h))
+                        if entry_copy.get(h) is not None
+                        else ""
+                    ),
+                    True,
+                    True,
+                )
+                for h in headers
+            ]
 
             # this pipe is optional
-            mdResult += '| '
+            mdResult += "| "
             try:
-                mdResult += ' | '.join(vals)
+                mdResult += " | ".join(vals)
             except UnicodeDecodeError:
                 vals = [str(v) for v in vals]
-                mdResult += ' | '.join(vals)
-            mdResult += ' |\n'
+                mdResult += " | ".join(vals)
+            mdResult += " |\n"
 
     else:
-        mdResult += '**No entries.**\n'
+        mdResult += "**No entries.**\n"
 
     return mdResult
 
+
 def argToBoolean(value):
     """
-        Boolean-ish arguments that are passed through demisto.args() could be type bool or type string.
-        This command removes the guesswork and returns a value of type bool, regardless of the input value's type.
-        It will also return True for 'yes' and False for 'no'.
+    Boolean-ish arguments that are passed through demisto.args() could be type bool or type string.
+    This command removes the guesswork and returns a value of type bool, regardless of the input value's type.
+    It will also return True for 'yes' and False for 'no'.
 
-        :param value: the value to evaluate
-        :type value: ``string|bool``
+    :param value: the value to evaluate
+    :type value: ``string|bool``
 
-        :return: a boolean representatation of 'value'
-        :rtype: ``bool``
+    :return: a boolean representatation of 'value'
+    :rtype: ``bool``
     """
     if isinstance(value, bool):
         return value
     if isinstance(value, STRING_OBJ_TYPES):
-        if value.lower() in ['true', 'yes']:
+        if value.lower() in ["true", "yes"]:
             return True
-        elif value.lower() in ['false', 'no']:
+        elif value.lower() in ["false", "no"]:
             return False
         else:
-            raise ConnectorError('Argument does not contain a valid boolean-like value')
+            raise ConnectorError("Argument does not contain a valid boolean-like value")
     else:
-        raise ConnectorError('Argument is neither a string nor a boolean')   
+        raise ConnectorError("Argument is neither a string nor a boolean")
+
 
 def remove_nulls_from_dictionary(data):
     """
-        Remove Null values from a dictionary. (updating the given dictionary)
+    Remove Null values from a dictionary. (updating the given dictionary)
 
-        :type data: ``dict``
-        :param data: The data to be added to the context (required)
+    :type data: ``dict``
+    :param data: The data to be added to the context (required)
 
-        :return: No data returned
-        :rtype: ``None``
+    :return: No data returned
+    :rtype: ``None``
     """
     list_of_keys = list(data.keys())[:]
     for key in list_of_keys:
-        if data[key] in ('', None, [], {}, ()):
+        if data[key] in ("", None, [], {}, ()):
             del data[key]
+
 
 class Common(object):
     class Indicator(object):
@@ -836,27 +887,37 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
+
         NONE = 0
         GOOD = 1
         SUSPICIOUS = 2
         BAD = 3
 
-        CONTEXT_PATH = 'DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor ' \
-                        '&& val.Type == obj.Type)'
+        CONTEXT_PATH = (
+            "DBotScore(val.Indicator && val.Indicator == obj.Indicator && val.Vendor == obj.Vendor " "&& val.Type == obj.Type)"
+        )
 
-        CONTEXT_PATH_PRIOR_V5_5 = 'DBotScore'
+        CONTEXT_PATH_PRIOR_V5_5 = "DBotScore"
 
-        def __init__(self, indicator, indicator_type, integration_name='', score=None, malicious_description=None,
-                    reliability=None, message=None):
+        def __init__(
+            self,
+            indicator,
+            indicator_type,
+            integration_name="",
+            score=None,
+            malicious_description=None,
+            reliability=None,
+            message=None,
+        ):
 
             if not DBotScoreType.is_valid_type(indicator_type):
-                raise ConnectorError('indicator_type must be of type DBotScoreType enum')
+                raise ConnectorError("indicator_type must be of type DBotScoreType enum")
 
             if not Common.DBotScore.is_valid_score(score):
-                raise ConnectorError('indicator `score` must be of type DBotScore enum')
+                raise ConnectorError("indicator `score` must be of type DBotScore enum")
 
             if reliability and not DBotScoreReliability.is_valid_type(reliability):
-                raise ConnectorError('reliability must be of type DBotScoreReliability enum')
+                raise ConnectorError("reliability must be of type DBotScoreReliability enum")
 
             self.indicator = indicator
             self.indicator_type = indicator_type
@@ -869,12 +930,7 @@ class Common(object):
 
         @staticmethod
         def is_valid_score(score):
-            return score in (
-                Common.DBotScore.NONE,
-                Common.DBotScore.GOOD,
-                Common.DBotScore.SUSPICIOUS,
-                Common.DBotScore.BAD
-            )
+            return score in (Common.DBotScore.NONE, Common.DBotScore.GOOD, Common.DBotScore.SUSPICIOUS, Common.DBotScore.BAD)
 
         @staticmethod
         def get_context_path():
@@ -882,29 +938,24 @@ class Common(object):
 
         def to_context(self):
             dbot_context = {
-                'Indicator': self.indicator,
-                'Type': self.indicator_type,
-                'Vendor': self.integration_name,
-                'Score': self.score
+                "Indicator": self.indicator,
+                "Type": self.indicator_type,
+                "Vendor": self.integration_name,
+                "Score": self.score,
             }
 
             if self.reliability:
-                dbot_context['Reliability'] = self.reliability
+                dbot_context["Reliability"] = self.reliability
 
             if self.message:
-                dbot_context['Message'] = self.message
+                dbot_context["Message"] = self.message
 
-            ret_value = {
-                Common.DBotScore.get_context_path(): dbot_context
-            }
+            ret_value = {Common.DBotScore.get_context_path(): dbot_context}
             return ret_value
 
         def to_readable(self):
-            dbot_score_to_text = {0: 'Unknown',
-                                1: 'Good',
-                                2: 'Suspicious',
-                                3: 'Bad'}
-            return dbot_score_to_text.get(self.score, 'Undefined')
+            dbot_score_to_text = {0: "Unknown", 1: "Good", 2: "Suspicious", 3: "Bad"}
+            return dbot_score_to_text.get(self.score, "Undefined")
 
     class CustomIndicator(Indicator):
 
@@ -932,20 +983,19 @@ class Common(object):
             :rtype: ``None``
             """
             if hasattr(DBotScoreType, indicator_type.upper()):
-                raise ConnectorError('Creating a custom indicator type with an existing type name is not allowed')
+                raise ConnectorError("Creating a custom indicator type with an existing type name is not allowed")
             if not value:
-                raise ConnectorError('value is mandatory for creating the indicator')
+                raise ConnectorError("value is mandatory for creating the indicator")
             if not context_prefix:
-                raise ConnectorError('context_prefix is mandatory for creating the indicator')
+                raise ConnectorError("context_prefix is mandatory for creating the indicator")
 
-            self.CONTEXT_PATH = '{context_prefix}(val.value && val.value == obj.value)'. \
-                format(context_prefix=context_prefix)
+            self.CONTEXT_PATH = "{context_prefix}(val.value && val.value == obj.value)".format(context_prefix=context_prefix)
 
             self.value = value
             self.relationships = relationships
 
             if not isinstance(dbot_score, Common.DBotScore):
-                raise ConnectorError('dbot_score must be of type DBotScore')
+                raise ConnectorError("dbot_score must be of type DBotScore")
 
             self.dbot_score = dbot_score
             self.indicator_type = indicator_type
@@ -956,24 +1006,21 @@ class Common(object):
                 setattr(self, key, data[key])
 
         def to_context(self):
-            custom_context = {
-                'value': self.value
-            }
+            custom_context = {"value": self.value}
 
             custom_context.update(self.data)
 
-            ret_value = {
-                self.CONTEXT_PATH: custom_context
-            }  # type: Dict[str, Any]
+            ret_value = {self.CONTEXT_PATH: custom_context}  # type: Dict[str, Any]
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
-            ret_value[Common.DBotScore.get_context_path()]['Type'] = self.indicator_type
+            ret_value[Common.DBotScore.get_context_path()]["Type"] = self.indicator_type
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                ret_value['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                ret_value["Relationships"] = relationships_context
 
             return ret_value
 
@@ -1111,20 +1158,54 @@ class Common(object):
         :rtype: ``None``
         """
 
-        CONTEXT_PATH = 'IP(val.Address && val.Address == obj.Address)'
+        CONTEXT_PATH = "IP(val.Address && val.Address == obj.Address)"
 
-        def __init__(self, ip, dbot_score, asn=None, as_owner=None, region=None, port=None, internal=None,
-                    updated_date=None, registrar_abuse_name=None, registrar_abuse_address=None,
-                    registrar_abuse_country=None, registrar_abuse_network=None, registrar_abuse_phone=None,
-                    registrar_abuse_email=None, campaign=None, traffic_light_protocol=None,
-                    community_notes=None, publications=None, threat_types=None,
-                    hostname=None, geo_latitude=None, geo_longitude=None,
-                    geo_country=None, geo_description=None, detection_engines=None, positive_engines=None,
-                    organization_name=None, organization_type=None, feed_related_indicators=None, tags=None,
-                    malware_family=None, relationships=None, blocked=None, description=None, stix_id=None,
-                    whois_records=None, organization_prevalence=None,
-                    global_prevalence=None, organization_first_seen=None, organization_last_seen=None,
-                    first_seen_by_source=None, last_seen_by_source=None, ip_type="IP"):
+        def __init__(
+            self,
+            ip,
+            dbot_score,
+            asn=None,
+            as_owner=None,
+            region=None,
+            port=None,
+            internal=None,
+            updated_date=None,
+            registrar_abuse_name=None,
+            registrar_abuse_address=None,
+            registrar_abuse_country=None,
+            registrar_abuse_network=None,
+            registrar_abuse_phone=None,
+            registrar_abuse_email=None,
+            campaign=None,
+            traffic_light_protocol=None,
+            community_notes=None,
+            publications=None,
+            threat_types=None,
+            hostname=None,
+            geo_latitude=None,
+            geo_longitude=None,
+            geo_country=None,
+            geo_description=None,
+            detection_engines=None,
+            positive_engines=None,
+            organization_name=None,
+            organization_type=None,
+            feed_related_indicators=None,
+            tags=None,
+            malware_family=None,
+            relationships=None,
+            blocked=None,
+            description=None,
+            stix_id=None,
+            whois_records=None,
+            organization_prevalence=None,
+            global_prevalence=None,
+            organization_first_seen=None,
+            organization_last_seen=None,
+            first_seen_by_source=None,
+            last_seen_by_source=None,
+            ip_type="IP",
+        ):
 
             # Main value of the indicator
             self.ip = ip
@@ -1175,143 +1256,148 @@ class Common(object):
             self.last_seen_by_source = last_seen_by_source
 
             if not isinstance(dbot_score, Common.DBotScore):
-                raise ConnectorError('dbot_score must be of type DBotScore')
+                raise ConnectorError("dbot_score must be of type DBotScore")
 
             self.dbot_score = dbot_score
 
         def to_context(self):
-            ip_context = {
-                'Address': self.ip
-            }
+            ip_context = {"Address": self.ip}
 
             if self.blocked:
-                ip_context['Blocked'] = self.blocked
+                ip_context["Blocked"] = self.blocked
 
             if self.asn:
-                ip_context['ASN'] = self.asn
+                ip_context["ASN"] = self.asn
 
             if self.as_owner:
-                ip_context['ASOwner'] = self.as_owner
+                ip_context["ASOwner"] = self.as_owner
 
             if self.region:
-                ip_context['Region'] = self.region
+                ip_context["Region"] = self.region
 
             if self.port:
-                ip_context['Port'] = self.port
+                ip_context["Port"] = self.port
 
             if self.internal:
-                ip_context['Internal'] = self.internal
+                ip_context["Internal"] = self.internal
 
             if self.stix_id:
-                ip_context['STIXID'] = self.stix_id
+                ip_context["STIXID"] = self.stix_id
 
             if self.updated_date:
-                ip_context['UpdatedDate'] = self.updated_date
+                ip_context["UpdatedDate"] = self.updated_date
 
-            if self.registrar_abuse_name or self.registrar_abuse_address or self.registrar_abuse_country or \
-                    self.registrar_abuse_network or self.registrar_abuse_phone or self.registrar_abuse_email:
-                ip_context['Registrar'] = {'Abuse': {}}
+            if (
+                self.registrar_abuse_name
+                or self.registrar_abuse_address
+                or self.registrar_abuse_country
+                or self.registrar_abuse_network
+                or self.registrar_abuse_phone
+                or self.registrar_abuse_email
+            ):
+                ip_context["Registrar"] = {"Abuse": {}}
                 if self.registrar_abuse_name:
-                    ip_context['Registrar']['Abuse']['Name'] = self.registrar_abuse_name
+                    ip_context["Registrar"]["Abuse"]["Name"] = self.registrar_abuse_name
                 if self.registrar_abuse_address:
-                    ip_context['Registrar']['Abuse']['Address'] = self.registrar_abuse_address
+                    ip_context["Registrar"]["Abuse"]["Address"] = self.registrar_abuse_address
                 if self.registrar_abuse_country:
-                    ip_context['Registrar']['Abuse']['Country'] = self.registrar_abuse_country
+                    ip_context["Registrar"]["Abuse"]["Country"] = self.registrar_abuse_country
                 if self.registrar_abuse_network:
-                    ip_context['Registrar']['Abuse']['Network'] = self.registrar_abuse_network
+                    ip_context["Registrar"]["Abuse"]["Network"] = self.registrar_abuse_network
                 if self.registrar_abuse_phone:
-                    ip_context['Registrar']['Abuse']['Phone'] = self.registrar_abuse_phone
+                    ip_context["Registrar"]["Abuse"]["Phone"] = self.registrar_abuse_phone
                 if self.registrar_abuse_email:
-                    ip_context['Registrar']['Abuse']['Email'] = self.registrar_abuse_email
+                    ip_context["Registrar"]["Abuse"]["Email"] = self.registrar_abuse_email
 
             if self.campaign:
-                ip_context['Campaign'] = self.campaign
+                ip_context["Campaign"] = self.campaign
 
             if self.description:
-                ip_context['Description'] = self.description
+                ip_context["Description"] = self.description
 
             if self.traffic_light_protocol:
-                ip_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                ip_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.community_notes:
-                ip_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                ip_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.publications:
-                ip_context['Publications'] = self.create_context_table(self.publications)
+                ip_context["Publications"] = self.create_context_table(self.publications)
 
             if self.threat_types:
-                ip_context['ThreatTypes'] = self.create_context_table(self.threat_types)
+                ip_context["ThreatTypes"] = self.create_context_table(self.threat_types)
 
             if self.whois_records:
-                ip_context['WhoisRecords'] = self.create_context_table(self.whois_records)
+                ip_context["WhoisRecords"] = self.create_context_table(self.whois_records)
 
             if self.hostname:
-                ip_context['Hostname'] = self.hostname
+                ip_context["Hostname"] = self.hostname
 
             if self.geo_latitude or self.geo_country or self.geo_description:
-                ip_context['Geo'] = {}
+                ip_context["Geo"] = {}
 
                 if self.geo_latitude and self.geo_longitude:
-                    ip_context['Geo']['Location'] = '{}:{}'.format(self.geo_latitude, self.geo_longitude)
+                    ip_context["Geo"]["Location"] = "{}:{}".format(self.geo_latitude, self.geo_longitude)
 
                 if self.geo_country:
-                    ip_context['Geo']['Country'] = self.geo_country
+                    ip_context["Geo"]["Country"] = self.geo_country
 
                 if self.geo_description:
-                    ip_context['Geo']['Description'] = self.geo_description
+                    ip_context["Geo"]["Description"] = self.geo_description
 
             if self.organization_name or self.organization_type:
-                ip_context['Organization'] = {}
+                ip_context["Organization"] = {}
 
                 if self.organization_name:
-                    ip_context['Organization']['Name'] = self.organization_name
+                    ip_context["Organization"]["Name"] = self.organization_name
 
                 if self.organization_type:
-                    ip_context['Organization']['Type'] = self.organization_type
+                    ip_context["Organization"]["Type"] = self.organization_type
 
             if self.detection_engines is not None:
-                ip_context['DetectionEngines'] = self.detection_engines
+                ip_context["DetectionEngines"] = self.detection_engines
 
             if self.positive_engines is not None:
-                ip_context['PositiveDetections'] = self.positive_engines
+                ip_context["PositiveDetections"] = self.positive_engines
 
             if self.feed_related_indicators:
-                ip_context['FeedRelatedIndicators'] = self.create_context_table(self.feed_related_indicators)
+                ip_context["FeedRelatedIndicators"] = self.create_context_table(self.feed_related_indicators)
 
             if self.tags:
-                ip_context['Tags'] = self.tags
+                ip_context["Tags"] = self.tags
 
             if self.malware_family:
-                ip_context['MalwareFamily'] = self.malware_family
+                ip_context["MalwareFamily"] = self.malware_family
 
             if self.organization_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                ip_context['OrganizationPrevalence'] = self.organization_prevalence
+                ip_context["OrganizationPrevalence"] = self.organization_prevalence
 
             if self.global_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                ip_context['GlobalPrevalence'] = self.global_prevalence
+                ip_context["GlobalPrevalence"] = self.global_prevalence
 
             if self.organization_first_seen:
-                ip_context['OrganizationFirstSeen'] = self.organization_first_seen
+                ip_context["OrganizationFirstSeen"] = self.organization_first_seen
 
             if self.organization_last_seen:
-                ip_context['OrganizationLastSeen'] = self.organization_last_seen
+                ip_context["OrganizationLastSeen"] = self.organization_last_seen
 
             if self.first_seen_by_source:
-                ip_context['FirstSeenBySource'] = self.first_seen_by_source
+                ip_context["FirstSeenBySource"] = self.first_seen_by_source
 
             if self.last_seen_by_source:
-                ip_context['LastSeenBySource'] = self.last_seen_by_source
+                ip_context["LastSeenBySource"] = self.last_seen_by_source
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                ip_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                ip_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                ip_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                ip_context["Relationships"] = relationships_context
 
             if self.ip_type == "IP":
                 context_path = Common.IP.CONTEXT_PATH
@@ -1319,9 +1405,7 @@ class Common(object):
             elif self.ip_type == "IPv6":
                 context_path = Common.IP.CONTEXT_PATH.replace("IP", "IPv6")
 
-            ret_value = {
-                context_path: ip_context
-            }
+            ret_value = {context_path: ip_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -1357,12 +1441,12 @@ class Common(object):
 
         def to_context(self):
             return {
-                'Authentihash': self.authentihash,
-                'Copyright': self.copyright,
-                'Description': self.description,
-                'FileVersion': self.file_version,
-                'InternalName': self.internal_name,
-                'OriginalName': self.original_name,
+                "Authentihash": self.authentihash,
+                "Copyright": self.copyright,
+                "Description": self.description,
+                "FileVersion": self.file_version,
+                "InternalName": self.internal_name,
+                "OriginalName": self.original_name,
             }
 
     class FeedRelatedIndicators(object):
@@ -1389,11 +1473,7 @@ class Common(object):
             self.description = description
 
         def to_context(self):
-            return {
-                'value': self.value,
-                'type': self.indicator_type,
-                'description': self.description
-            }
+            return {"value": self.value, "type": self.indicator_type, "description": self.description}
 
     class Rank:
         """
@@ -1411,10 +1491,7 @@ class Common(object):
             self.source = source
 
         def to_context(self):
-            return {
-                'source': self.source,
-                'rank': self.rank
-            }
+            return {"source": self.source, "rank": self.rank}
 
     class ExternalReference(object):
         """
@@ -1437,8 +1514,8 @@ class Common(object):
 
         def to_context(self):
             return {
-                'sourcename': self.source_name,
-                'sourceid': self.source_id,
+                "sourcename": self.source_name,
+                "sourceid": self.source_id,
             }
 
     class Certificates(object):
@@ -1470,10 +1547,10 @@ class Common(object):
 
         def to_context(self):
             return {
-                'issuedto': self.issued_to,
-                'issuedby': self.issued_by,
-                'validfrom': self.valid_from,
-                'validto': self.valid_to
+                "issuedto": self.issued_to,
+                "issuedby": self.issued_by,
+                "validfrom": self.valid_from,
+                "validto": self.valid_to,
             }
 
     class Hash(object):
@@ -1497,8 +1574,8 @@ class Common(object):
 
         def to_context(self):
             return {
-                'type': self.hash_type,
-                'value': self.hash_value,
+                "type": self.hash_type,
+                "value": self.hash_value,
             }
 
     class CommunityNotes(object):
@@ -1522,8 +1599,8 @@ class Common(object):
 
         def to_context(self):
             return {
-                'note': self.note,
-                'timestamp': self.timestamp,
+                "note": self.note,
+                "timestamp": self.timestamp,
             }
 
     class Publications(object):
@@ -1555,10 +1632,10 @@ class Common(object):
 
         def to_context(self):
             return {
-                'source': self.source,
-                'title': self.title,
-                'link': self.link,
-                'timestamp': self.timestamp,
+                "source": self.source,
+                "title": self.title,
+                "link": self.link,
+                "timestamp": self.timestamp,
             }
 
     class Behaviors(object):
@@ -1582,8 +1659,8 @@ class Common(object):
 
         def to_context(self):
             return {
-                'details': self.details,
-                'title': self.action,
+                "details": self.details,
+                "title": self.action,
             }
 
     class ThreatTypes(object):
@@ -1611,8 +1688,8 @@ class Common(object):
 
         def to_context(self):
             return {
-                'threatcategory': self.threat_category,
-                'threatcategoryconfidence': self.threat_category_confidence,
+                "threatcategory": self.threat_category,
+                "threatcategoryconfidence": self.threat_category_confidence,
             }
 
     class WhoisRecord(object):
@@ -1639,11 +1716,7 @@ class Common(object):
             self.whois_record_date = whois_record_date
 
         def to_context(self):
-            return {
-                'key': self.whois_record_type,
-                'value': self.whois_record_value,
-                'date': self.whois_record_date
-            }
+            return {"key": self.whois_record_type, "value": self.whois_record_value, "date": self.whois_record_date}
 
     class DNSRecord(object):
         """
@@ -1669,11 +1742,7 @@ class Common(object):
             self.dns_record_data = dns_record_data
 
         def to_context(self):
-            return {
-                'type': self.dns_record_type,
-                'ttl': self.dns_ttl,
-                'data': self.dns_record_data
-            }
+            return {"type": self.dns_record_type, "ttl": self.dns_ttl, "data": self.dns_record_data}
 
     class CPE:
         """
@@ -1692,7 +1761,7 @@ class Common(object):
 
         def to_context(self):
             return {
-                'CPE': self.cpe,
+                "CPE": self.cpe,
             }
 
     class File(Indicator):
@@ -1827,20 +1896,59 @@ class Common(object):
         :rtype: ``None``
         :return: None
         """
-        CONTEXT_PATH = 'File(val.MD5 && val.MD5 == obj.MD5 || val.SHA1 && val.SHA1 == obj.SHA1 || ' \
-                        'val.SHA256 && val.SHA256 == obj.SHA256 || val.SHA512 && val.SHA512 == obj.SHA512 || ' \
-                        'val.CRC32 && val.CRC32 == obj.CRC32 || val.CTPH && val.CTPH == obj.CTPH || ' \
-                        'val.SSDeep && val.SSDeep == obj.SSDeep)'
 
-        def __init__(self, dbot_score, name=None, entry_id=None, size=None, md5=None, sha1=None, sha256=None,
-                    sha512=None, ssdeep=None, extension=None, file_type=None, hostname=None, path=None, company=None,
-                    product_name=None, digital_signature__publisher=None, signature=None, actor=None, tags=None,
-                    feed_related_indicators=None, malware_family=None, imphash=None, quarantined=None, campaign=None,
-                    associated_file_names=None, traffic_light_protocol=None, organization=None, community_notes=None,
-                    publications=None, threat_types=None, behaviors=None, relationships=None,
-                    creation_date=None, description=None, hashes=None, stix_id=None, organization_prevalence=None,
-                    global_prevalence=None, organization_first_seen=None, organization_last_seen=None,
-                    first_seen_by_source=None, last_seen_by_source=None):
+        CONTEXT_PATH = (
+            "File(val.MD5 && val.MD5 == obj.MD5 || val.SHA1 && val.SHA1 == obj.SHA1 || "
+            "val.SHA256 && val.SHA256 == obj.SHA256 || val.SHA512 && val.SHA512 == obj.SHA512 || "
+            "val.CRC32 && val.CRC32 == obj.CRC32 || val.CTPH && val.CTPH == obj.CTPH || "
+            "val.SSDeep && val.SSDeep == obj.SSDeep)"
+        )
+
+        def __init__(
+            self,
+            dbot_score,
+            name=None,
+            entry_id=None,
+            size=None,
+            md5=None,
+            sha1=None,
+            sha256=None,
+            sha512=None,
+            ssdeep=None,
+            extension=None,
+            file_type=None,
+            hostname=None,
+            path=None,
+            company=None,
+            product_name=None,
+            digital_signature__publisher=None,
+            signature=None,
+            actor=None,
+            tags=None,
+            feed_related_indicators=None,
+            malware_family=None,
+            imphash=None,
+            quarantined=None,
+            campaign=None,
+            associated_file_names=None,
+            traffic_light_protocol=None,
+            organization=None,
+            community_notes=None,
+            publications=None,
+            threat_types=None,
+            behaviors=None,
+            relationships=None,
+            creation_date=None,
+            description=None,
+            hashes=None,
+            stix_id=None,
+            organization_prevalence=None,
+            global_prevalence=None,
+            organization_first_seen=None,
+            organization_last_seen=None,
+            first_seen_by_source=None,
+            last_seen_by_source=None,
+        ):
 
             # Main value of a file (Hashes)
             self.md5 = md5
@@ -1893,147 +2001,138 @@ class Common(object):
             self.dbot_score = dbot_score
 
         def to_context(self):
-            file_context = {'Hashes': []}  # type: dict
+            file_context = {"Hashes": []}  # type: dict
 
             if self.name:
-                file_context['Name'] = self.name
+                file_context["Name"] = self.name
 
             if self.hashes:
-                file_context['Hashes'] = self.create_context_table(self.hashes)
+                file_context["Hashes"] = self.create_context_table(self.hashes)
 
             if self.entry_id:
-                file_context['EntryID'] = self.entry_id
+                file_context["EntryID"] = self.entry_id
 
             if self.size:
-                file_context['Size'] = self.size
+                file_context["Size"] = self.size
 
             if self.md5:
-                file_context['MD5'] = self.md5
-                file_context['Hashes'].append({'type': 'MD5',
-                                                'value': self.md5})
+                file_context["MD5"] = self.md5
+                file_context["Hashes"].append({"type": "MD5", "value": self.md5})
 
             if self.sha1:
-                file_context['SHA1'] = self.sha1
-                file_context['Hashes'].append({'type': 'SHA1',
-                                                'value': self.sha1})
+                file_context["SHA1"] = self.sha1
+                file_context["Hashes"].append({"type": "SHA1", "value": self.sha1})
 
             if self.sha256:
-                file_context['SHA256'] = self.sha256
-                file_context['Hashes'].append({'type': 'SHA256',
-                                                'value': self.sha256})
+                file_context["SHA256"] = self.sha256
+                file_context["Hashes"].append({"type": "SHA256", "value": self.sha256})
 
             if self.sha512:
-                file_context['SHA512'] = self.sha512
-                file_context['Hashes'].append({'type': 'SHA512',
-                                                'value': self.sha512})
+                file_context["SHA512"] = self.sha512
+                file_context["Hashes"].append({"type": "SHA512", "value": self.sha512})
 
             if self.ssdeep:
-                file_context['SSDeep'] = self.ssdeep
-                file_context['Hashes'].append({'type': 'SSDeep',
-                                                'value': self.ssdeep})
+                file_context["SSDeep"] = self.ssdeep
+                file_context["Hashes"].append({"type": "SSDeep", "value": self.ssdeep})
 
             if self.extension:
-                file_context['Extension'] = self.extension
+                file_context["Extension"] = self.extension
 
             if self.file_type:
-                file_context['Type'] = self.file_type
+                file_context["Type"] = self.file_type
 
             if self.hostname:
-                file_context['Hostname'] = self.hostname
+                file_context["Hostname"] = self.hostname
 
             if self.path:
-                file_context['Path'] = self.path
+                file_context["Path"] = self.path
 
             if self.company:
-                file_context['Company'] = self.company
+                file_context["Company"] = self.company
 
             if self.product_name:
-                file_context['ProductName'] = self.product_name
+                file_context["ProductName"] = self.product_name
 
             if self.digital_signature__publisher:
-                file_context['DigitalSignature'] = {
-                    'Published': self.digital_signature__publisher
-                }
+                file_context["DigitalSignature"] = {"Published": self.digital_signature__publisher}
 
             if self.signature:
-                file_context['Signature'] = self.signature.to_context()
+                file_context["Signature"] = self.signature.to_context()
 
             if self.actor:
-                file_context['Actor'] = self.actor
+                file_context["Actor"] = self.actor
 
             if self.tags:
-                file_context['Tags'] = self.tags
+                file_context["Tags"] = self.tags
 
             if self.feed_related_indicators:
-                file_context['FeedRelatedIndicators'] = self.create_context_table(self.feed_related_indicators)
+                file_context["FeedRelatedIndicators"] = self.create_context_table(self.feed_related_indicators)
 
             if self.malware_family:
-                file_context['MalwareFamily'] = self.malware_family
+                file_context["MalwareFamily"] = self.malware_family
 
             if self.campaign:
-                file_context['Campaign'] = self.campaign
+                file_context["Campaign"] = self.campaign
 
             if self.traffic_light_protocol:
-                file_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                file_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.community_notes:
-                file_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                file_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.publications:
-                file_context['Publications'] = self.create_context_table(self.publications)
+                file_context["Publications"] = self.create_context_table(self.publications)
 
             if self.threat_types:
-                file_context['ThreatTypes'] = self.create_context_table(self.threat_types)
+                file_context["ThreatTypes"] = self.create_context_table(self.threat_types)
 
             if self.imphash:
-                file_context['Imphash'] = self.imphash
-                file_context['Hashes'].append({'type': 'Imphash',
-                                                'value': self.imphash})
+                file_context["Imphash"] = self.imphash
+                file_context["Hashes"].append({"type": "Imphash", "value": self.imphash})
 
             if self.quarantined:
-                file_context['Quarantined'] = self.quarantined
+                file_context["Quarantined"] = self.quarantined
 
             if self.organization:
-                file_context['Organization'] = self.organization
+                file_context["Organization"] = self.organization
 
             if self.associated_file_names:
-                file_context['AssociatedFileNames'] = self.associated_file_names
+                file_context["AssociatedFileNames"] = self.associated_file_names
 
             if self.behaviors:
-                file_context['Behavior'] = self.create_context_table(self.behaviors)
+                file_context["Behavior"] = self.create_context_table(self.behaviors)
 
             if self.organization_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                file_context['OrganizationPrevalence'] = self.organization_prevalence
+                file_context["OrganizationPrevalence"] = self.organization_prevalence
 
             if self.global_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                file_context['GlobalPrevalence'] = self.global_prevalence
+                file_context["GlobalPrevalence"] = self.global_prevalence
 
             if self.organization_first_seen:
-                file_context['OrganizationFirstSeen'] = self.organization_first_seen
+                file_context["OrganizationFirstSeen"] = self.organization_first_seen
 
             if self.organization_last_seen:
-                file_context['OrganizationLastSeen'] = self.organization_last_seen
+                file_context["OrganizationLastSeen"] = self.organization_last_seen
 
             if self.first_seen_by_source:
-                file_context['FirstSeenBySource'] = self.first_seen_by_source
+                file_context["FirstSeenBySource"] = self.first_seen_by_source
 
             if self.last_seen_by_source:
-                file_context['LastSeenBySource'] = self.last_seen_by_source
+                file_context["LastSeenBySource"] = self.last_seen_by_source
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                file_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                file_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                file_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                file_context["Relationships"] = relationships_context
 
-            ret_value = {
-                Common.File.CONTEXT_PATH: file_context
-            }
+            ret_value = {Common.File.CONTEXT_PATH: file_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -2100,12 +2199,30 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'CVE(val.ID && val.ID == obj.ID)'
 
-        def __init__(self, id, cvss, published, modified, description, relationships=None, stix_id=None,
-                    cvss_version=None, cvss_score=None, cvss_vector=None, cvss_table=None, community_notes=None,
-                    tags=None, traffic_light_protocol=None, dbot_score=None, publications=None,
-                    vulnerable_products=None, vulnerable_configurations=None):
+        CONTEXT_PATH = "CVE(val.ID && val.ID == obj.ID)"
+
+        def __init__(
+            self,
+            id,
+            cvss,
+            published,
+            modified,
+            description,
+            relationships=None,
+            stix_id=None,
+            cvss_version=None,
+            cvss_score=None,
+            cvss_vector=None,
+            cvss_table=None,
+            community_notes=None,
+            tags=None,
+            traffic_light_protocol=None,
+            dbot_score=None,
+            publications=None,
+            vulnerable_products=None,
+            vulnerable_configurations=None,
+        ):
 
             # Main indicator value
             self.id = id
@@ -2127,10 +2244,13 @@ class Common(object):
 
             # XSOAR Fields
             self.relationships = relationships
-            self.dbot_score = dbot_score if dbot_score else Common.DBotScore(indicator=id,
-                                                                            indicator_type=DBotScoreType.CVE,
-                                                                            integration_name=None,
-                                                                            score=Common.DBotScore.NONE)
+            self.dbot_score = (
+                dbot_score
+                if dbot_score
+                else Common.DBotScore(
+                    indicator=id, indicator_type=DBotScoreType.CVE, integration_name=None, score=Common.DBotScore.NONE
+                )
+            )
 
             # Core custom fields for CVE type
             self.vulnerable_products = vulnerable_products
@@ -2138,66 +2258,65 @@ class Common(object):
 
         def to_context(self):
             cve_context = {
-                'ID': self.id,
-                'CVSS': {},
+                "ID": self.id,
+                "CVSS": {},
             }
 
             if self.cvss:
-                cve_context['CVSS']['Score'] = self.cvss
+                cve_context["CVSS"]["Score"] = self.cvss
 
             elif self.cvss_score:
-                cve_context['CVSS']['Score'] = self.cvss_score
+                cve_context["CVSS"]["Score"] = self.cvss_score
 
             if self.cvss_version:
-                cve_context['CVSS']['Version'] = self.cvss_version
+                cve_context["CVSS"]["Version"] = self.cvss_version
 
             if self.cvss_vector:
-                cve_context['CVSS']['Vector'] = self.cvss_vector
+                cve_context["CVSS"]["Vector"] = self.cvss_vector
 
             if self.cvss_table:
-                cve_context['CVSS']['Table'] = self.cvss_table
+                cve_context["CVSS"]["Table"] = self.cvss_table
 
             if self.published:
-                cve_context['Published'] = self.published
+                cve_context["Published"] = self.published
 
             if self.modified:
-                cve_context['Modified'] = self.modified
+                cve_context["Modified"] = self.modified
 
             if self.description:
-                cve_context['Description'] = self.description
+                cve_context["Description"] = self.description
 
             if self.stix_id:
-                cve_context['STIXID'] = self.stix_id
+                cve_context["STIXID"] = self.stix_id
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                cve_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                cve_context["Relationships"] = relationships_context
 
             if self.community_notes:
-                cve_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                cve_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.tags:
-                cve_context['Tags'] = self.tags
+                cve_context["Tags"] = self.tags
 
             if self.traffic_light_protocol:
-                cve_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                cve_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
-            ret_value = {
-                Common.CVE.CONTEXT_PATH: cve_context
-            }
+            ret_value = {Common.CVE.CONTEXT_PATH: cve_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
 
             if self.publications:
-                cve_context['Publications'] = self.create_context_table(self.publications)
+                cve_context["Publications"] = self.create_context_table(self.publications)
 
             if self.vulnerable_products:
-                cve_context['VulnerableProducts'] = self.create_context_table(self.vulnerable_products)
+                cve_context["VulnerableProducts"] = self.create_context_table(self.vulnerable_products)
 
             if self.vulnerable_configurations:
-                cve_context['VulnerableConfigurations'] = self.create_context_table(self.vulnerable_configurations)
+                cve_context["VulnerableConfigurations"] = self.create_context_table(self.vulnerable_configurations)
 
             return ret_value
 
@@ -2235,10 +2354,22 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'Account(val.Email.Address && val.Email.Address == obj.Email.Address)'
 
-        def __init__(self, address, dbot_score, domain=None, blocked=None, relationships=None, description=None,
-                    internal=None, stix_id=None, tags=None, traffic_light_protocol=None):
+        CONTEXT_PATH = "Account(val.Email.Address && val.Email.Address == obj.Email.Address)"
+
+        def __init__(
+            self,
+            address,
+            dbot_score,
+            domain=None,
+            blocked=None,
+            relationships=None,
+            description=None,
+            internal=None,
+            stix_id=None,
+            tags=None,
+            traffic_light_protocol=None,
+        ):
             # type (str, str, bool) -> None
 
             # Main indicator value
@@ -2260,39 +2391,36 @@ class Common(object):
             self.relationships = relationships
 
         def to_context(self):
-            email_context = {
-                'Email': {'Address': self.address}
-            }
+            email_context = {"Email": {"Address": self.address}}
 
             if self.blocked:
-                email_context['Blocked'] = self.blocked
+                email_context["Blocked"] = self.blocked
 
             if self.domain:
-                email_context['Domain'] = self.domain
+                email_context["Domain"] = self.domain
 
             if self.description:
-                email_context['Description'] = self.description
+                email_context["Description"] = self.description
 
             if self.internal:
-                email_context['Internal'] = self.internal
+                email_context["Internal"] = self.internal
 
             if self.stix_id:
-                email_context['STIXID'] = self.stix_id
+                email_context["STIXID"] = self.stix_id
 
             if self.tags:
-                email_context['Tags'] = self.tags
+                email_context["Tags"] = self.tags
 
             if self.traffic_light_protocol:
-                email_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                email_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                email_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                email_context["Relationships"] = relationships_context
 
-            ret_value = {
-                Common.EMAIL.CONTEXT_PATH: email_context
-            }
+            ret_value = {Common.EMAIL.CONTEXT_PATH: email_context}
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
             return ret_value
@@ -2393,15 +2521,42 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'URL(val.Data && val.Data == obj.Data)'
 
-        def __init__(self, url, dbot_score, detection_engines=None, positive_detections=None, category=None,
-                    feed_related_indicators=None, tags=None, malware_family=None, port=None, internal=None,
-                    campaign=None, traffic_light_protocol=None, threat_types=None, asn=None, as_owner=None,
-                    geo_country=None, organization=None, community_notes=None, publications=None, relationships=None,
-                    blocked=None, certificates=None, description=None, stix_id=None, organization_prevalence=None,
-                    global_prevalence=None, organization_first_seen=None, organization_last_seen=None,
-                    first_seen_by_source=None, last_seen_by_source=None):
+        CONTEXT_PATH = "URL(val.Data && val.Data == obj.Data)"
+
+        def __init__(
+            self,
+            url,
+            dbot_score,
+            detection_engines=None,
+            positive_detections=None,
+            category=None,
+            feed_related_indicators=None,
+            tags=None,
+            malware_family=None,
+            port=None,
+            internal=None,
+            campaign=None,
+            traffic_light_protocol=None,
+            threat_types=None,
+            asn=None,
+            as_owner=None,
+            geo_country=None,
+            organization=None,
+            community_notes=None,
+            publications=None,
+            relationships=None,
+            blocked=None,
+            certificates=None,
+            description=None,
+            stix_id=None,
+            organization_prevalence=None,
+            global_prevalence=None,
+            organization_first_seen=None,
+            organization_last_seen=None,
+            first_seen_by_source=None,
+            last_seen_by_source=None,
+        ):
 
             # Main indicator value
             self.url = url
@@ -2442,105 +2597,102 @@ class Common(object):
             self.dbot_score = dbot_score
 
         def to_context(self):
-            url_context = {
-                'Data': self.url
-            }
+            url_context = {"Data": self.url}
 
             if self.blocked:
-                url_context['Blocked'] = self.blocked
+                url_context["Blocked"] = self.blocked
 
             if self.certificates:
-                url_context['Certificates'] = self.create_context_table(self.certificates)
+                url_context["Certificates"] = self.create_context_table(self.certificates)
 
             if self.description:
-                url_context['Description'] = self.description
+                url_context["Description"] = self.description
 
             if self.stix_id:
-                url_context['STIXID'] = self.stix_id
+                url_context["STIXID"] = self.stix_id
 
             if self.detection_engines is not None:
-                url_context['DetectionEngines'] = self.detection_engines
+                url_context["DetectionEngines"] = self.detection_engines
 
             if self.positive_detections is not None:
-                url_context['PositiveDetections'] = self.positive_detections
+                url_context["PositiveDetections"] = self.positive_detections
 
             if self.category:
-                url_context['Category'] = self.category
+                url_context["Category"] = self.category
 
             if self.feed_related_indicators:
-                url_context['FeedRelatedIndicators'] = self.create_context_table(self.feed_related_indicators)
+                url_context["FeedRelatedIndicators"] = self.create_context_table(self.feed_related_indicators)
 
             if self.tags:
-                url_context['Tags'] = self.tags
+                url_context["Tags"] = self.tags
 
             if self.malware_family:
-                url_context['MalwareFamily'] = self.malware_family
+                url_context["MalwareFamily"] = self.malware_family
 
             if self.port:
-                url_context['Port'] = self.port
+                url_context["Port"] = self.port
 
             if self.internal:
-                url_context['Internal'] = self.internal
+                url_context["Internal"] = self.internal
 
             if self.campaign:
-                url_context['Campaign'] = self.campaign
+                url_context["Campaign"] = self.campaign
 
             if self.traffic_light_protocol:
-                url_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                url_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.threat_types:
-                url_context['ThreatTypes'] = self.create_context_table(self.threat_types)
+                url_context["ThreatTypes"] = self.create_context_table(self.threat_types)
 
             if self.asn:
-                url_context['ASN'] = self.asn
+                url_context["ASN"] = self.asn
 
             if self.as_owner:
-                url_context['ASOwner'] = self.as_owner
+                url_context["ASOwner"] = self.as_owner
 
             if self.geo_country:
-                url_context['Geo'] = {'Country': self.geo_country}
+                url_context["Geo"] = {"Country": self.geo_country}
 
             if self.organization:
-                url_context['Organization'] = self.organization
+                url_context["Organization"] = self.organization
 
             if self.community_notes:
-                url_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                url_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.publications:
-                url_context['Publications'] = self.create_context_table(self.publications)
+                url_context["Publications"] = self.create_context_table(self.publications)
 
             if self.organization_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                url_context['OrganizationPrevalence'] = self.organization_prevalence
+                url_context["OrganizationPrevalence"] = self.organization_prevalence
 
             if self.global_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                url_context['GlobalPrevalence'] = self.global_prevalence
+                url_context["GlobalPrevalence"] = self.global_prevalence
 
             if self.organization_first_seen:
-                url_context['OrganizationFirstSeen'] = self.organization_first_seen
+                url_context["OrganizationFirstSeen"] = self.organization_first_seen
 
             if self.organization_last_seen:
-                url_context['OrganizationLastSeen'] = self.organization_last_seen
+                url_context["OrganizationLastSeen"] = self.organization_last_seen
 
             if self.first_seen_by_source:
-                url_context['FirstSeenBySource'] = self.first_seen_by_source
+                url_context["FirstSeenBySource"] = self.first_seen_by_source
 
             if self.last_seen_by_source:
-                url_context['LastSeenBySource'] = self.last_seen_by_source
+                url_context["LastSeenBySource"] = self.last_seen_by_source
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                url_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                url_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                url_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                url_context["Relationships"] = relationships_context
 
-            ret_value = {
-                Common.URL.CONTEXT_PATH: url_context
-            }
+            ret_value = {Common.URL.CONTEXT_PATH: url_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -2548,7 +2700,7 @@ class Common(object):
             return ret_value
 
     class Domain(Indicator):
-        """ ignore docstring
+        """ignore docstring
         Domain indicator - https://xsoar.pan.dev/docs/integrations/context-standards-mandatory#domain
 
         :type whois_records: ``WhoisRecord``
@@ -2587,22 +2739,69 @@ class Common(object):
         :type last_seen_by_source: ``str``
         :param last_seen_by_source: ISO 8601 date time string; when the indicator was last seen by the source vendor.
         """
-        CONTEXT_PATH = 'Domain(val.Name && val.Name == obj.Name)'
 
-        def __init__(self, domain, dbot_score, dns=None, detection_engines=None, positive_detections=None,
-                    organization=None, sub_domains=None, creation_date=None, updated_date=None, expiration_date=None,
-                    domain_status=None, name_servers=None, feed_related_indicators=None, malware_family=None,
-                    registrar_name=None, registrar_abuse_email=None, registrar_abuse_phone=None,
-                    registrant_name=None, registrant_email=None, registrant_phone=None, registrant_country=None,
-                    admin_name=None, admin_email=None, admin_phone=None, admin_country=None, tags=None,
-                    domain_idn_name=None, port=None,
-                    internal=None, category=None, campaign=None, traffic_light_protocol=None, threat_types=None,
-                    community_notes=None, publications=None, geo_location=None, geo_country=None, geo_description=None,
-                    tech_country=None, tech_name=None, tech_email=None, tech_organization=None, billing=None,
-                    whois_records=None, relationships=None, description=None, stix_id=None, blocked=None,
-                    certificates=None, dns_records=None, rank=None, organization_prevalence=None,
-                    global_prevalence=None, organization_first_seen=None, organization_last_seen=None,
-                    first_seen_by_source=None, last_seen_by_source=None):
+        CONTEXT_PATH = "Domain(val.Name && val.Name == obj.Name)"
+
+        def __init__(
+            self,
+            domain,
+            dbot_score,
+            dns=None,
+            detection_engines=None,
+            positive_detections=None,
+            organization=None,
+            sub_domains=None,
+            creation_date=None,
+            updated_date=None,
+            expiration_date=None,
+            domain_status=None,
+            name_servers=None,
+            feed_related_indicators=None,
+            malware_family=None,
+            registrar_name=None,
+            registrar_abuse_email=None,
+            registrar_abuse_phone=None,
+            registrant_name=None,
+            registrant_email=None,
+            registrant_phone=None,
+            registrant_country=None,
+            admin_name=None,
+            admin_email=None,
+            admin_phone=None,
+            admin_country=None,
+            tags=None,
+            domain_idn_name=None,
+            port=None,
+            internal=None,
+            category=None,
+            campaign=None,
+            traffic_light_protocol=None,
+            threat_types=None,
+            community_notes=None,
+            publications=None,
+            geo_location=None,
+            geo_country=None,
+            geo_description=None,
+            tech_country=None,
+            tech_name=None,
+            tech_email=None,
+            tech_organization=None,
+            billing=None,
+            whois_records=None,
+            relationships=None,
+            description=None,
+            stix_id=None,
+            blocked=None,
+            certificates=None,
+            dns_records=None,
+            rank=None,
+            organization_prevalence=None,
+            global_prevalence=None,
+            organization_first_seen=None,
+            organization_last_seen=None,
+            first_seen_by_source=None,
+            last_seen_by_source=None,
+        ):
 
             # Main indicator value
             self.domain = domain
@@ -2677,204 +2876,218 @@ class Common(object):
             self.dbot_score = dbot_score
 
         def to_context(self):
-            domain_context = {
-                'Name': self.domain
-            }
+            domain_context = {"Name": self.domain}
             whois_context = {}
 
             if self.dns:
-                domain_context['DNS'] = self.dns
+                domain_context["DNS"] = self.dns
 
             if self.detection_engines is not None:
-                domain_context['DetectionEngines'] = self.detection_engines
+                domain_context["DetectionEngines"] = self.detection_engines
 
             if self.positive_detections is not None:
-                domain_context['PositiveDetections'] = self.positive_detections
+                domain_context["PositiveDetections"] = self.positive_detections
 
             if self.registrar_name or self.registrar_abuse_email or self.registrar_abuse_phone:
-                domain_context['Registrar'] = {
-                    'Name': self.registrar_name,
-                    'AbuseEmail': self.registrar_abuse_email,
-                    'AbusePhone': self.registrar_abuse_phone
+                domain_context["Registrar"] = {
+                    "Name": self.registrar_name,
+                    "AbuseEmail": self.registrar_abuse_email,
+                    "AbusePhone": self.registrar_abuse_phone,
                 }
-                whois_context['Registrar'] = domain_context['Registrar']
+                whois_context["Registrar"] = domain_context["Registrar"]
 
             if self.registrant_name or self.registrant_phone or self.registrant_email or self.registrant_country:
-                domain_context['Registrant'] = {
-                    'Name': self.registrant_name,
-                    'Email': self.registrant_email,
-                    'Phone': self.registrant_phone,
-                    'Country': self.registrant_country
+                domain_context["Registrant"] = {
+                    "Name": self.registrant_name,
+                    "Email": self.registrant_email,
+                    "Phone": self.registrant_phone,
+                    "Country": self.registrant_country,
                 }
-                whois_context['Registrant'] = domain_context['Registrant']
+                whois_context["Registrant"] = domain_context["Registrant"]
 
             if self.admin_name or self.admin_email or self.admin_phone or self.admin_country:
-                domain_context['Admin'] = {
-                    'Name': self.admin_name,
-                    'Email': self.admin_email,
-                    'Phone': self.admin_phone,
-                    'Country': self.admin_country
+                domain_context["Admin"] = {
+                    "Name": self.admin_name,
+                    "Email": self.admin_email,
+                    "Phone": self.admin_phone,
+                    "Country": self.admin_country,
                 }
-                whois_context['Admin'] = domain_context['Admin']
+                whois_context["Admin"] = domain_context["Admin"]
 
             if self.organization:
-                domain_context['Organization'] = self.organization
+                domain_context["Organization"] = self.organization
 
             if self.sub_domains:
-                domain_context['Subdomains'] = self.sub_domains
+                domain_context["Subdomains"] = self.sub_domains
 
             if self.domain_status:
-                domain_context['DomainStatus'] = self.domain_status
-                whois_context['DomainStatus'] = domain_context['DomainStatus']
+                domain_context["DomainStatus"] = self.domain_status
+                whois_context["DomainStatus"] = domain_context["DomainStatus"]
 
             if self.creation_date:
-                domain_context['CreationDate'] = self.creation_date
-                whois_context['CreationDate'] = domain_context['CreationDate']
+                domain_context["CreationDate"] = self.creation_date
+                whois_context["CreationDate"] = domain_context["CreationDate"]
 
             if self.updated_date:
-                domain_context['UpdatedDate'] = self.updated_date
-                whois_context['UpdatedDate'] = domain_context['UpdatedDate']
+                domain_context["UpdatedDate"] = self.updated_date
+                whois_context["UpdatedDate"] = domain_context["UpdatedDate"]
 
             if self.expiration_date:
-                domain_context['ExpirationDate'] = self.expiration_date
-                whois_context['ExpirationDate'] = domain_context['ExpirationDate']
+                domain_context["ExpirationDate"] = self.expiration_date
+                whois_context["ExpirationDate"] = domain_context["ExpirationDate"]
 
             if self.name_servers:
-                domain_context['NameServers'] = self.name_servers
-                whois_context['NameServers'] = domain_context['NameServers']
+                domain_context["NameServers"] = self.name_servers
+                whois_context["NameServers"] = domain_context["NameServers"]
 
             if self.tags:
-                domain_context['Tags'] = self.tags
+                domain_context["Tags"] = self.tags
 
             if self.feed_related_indicators:
-                domain_context['FeedRelatedIndicators'] = self.create_context_table(self.feed_related_indicators)
+                domain_context["FeedRelatedIndicators"] = self.create_context_table(self.feed_related_indicators)
 
             if self.whois_records:
-                domain_context['WhoisRecords'] = self.create_context_table(self.whois_records)
+                domain_context["WhoisRecords"] = self.create_context_table(self.whois_records)
 
             if self.malware_family:
-                domain_context['MalwareFamily'] = self.malware_family
+                domain_context["MalwareFamily"] = self.malware_family
 
             if self.organization_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                domain_context['OrganizationPrevalence'] = self.organization_prevalence
+                domain_context["OrganizationPrevalence"] = self.organization_prevalence
 
             if self.global_prevalence is not None:  # checking for `is not None` to allow `0`-value
-                domain_context['GlobalPrevalence'] = self.global_prevalence
+                domain_context["GlobalPrevalence"] = self.global_prevalence
 
             if self.organization_first_seen:
-                domain_context['OrganizationFirstSeen'] = self.organization_first_seen
+                domain_context["OrganizationFirstSeen"] = self.organization_first_seen
 
             if self.organization_last_seen:
-                domain_context['OrganizationLastSeen'] = self.organization_last_seen
+                domain_context["OrganizationLastSeen"] = self.organization_last_seen
 
             if self.first_seen_by_source:
-                domain_context['FirstSeenBySource'] = self.first_seen_by_source
+                domain_context["FirstSeenBySource"] = self.first_seen_by_source
 
             if self.last_seen_by_source:
-                domain_context['LastSeenBySource'] = self.last_seen_by_source
+                domain_context["LastSeenBySource"] = self.last_seen_by_source
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                domain_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                domain_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
             if self.domain_idn_name:
-                domain_context['DomainIDNName'] = self.domain_idn_name
+                domain_context["DomainIDNName"] = self.domain_idn_name
 
             if self.port:
-                domain_context['Port'] = self.port
+                domain_context["Port"] = self.port
 
             if self.internal:
-                domain_context['Internal'] = self.internal
+                domain_context["Internal"] = self.internal
 
             if self.category:
-                domain_context['Category'] = self.category
+                domain_context["Category"] = self.category
 
             if self.campaign:
-                domain_context['Campaign'] = self.campaign
+                domain_context["Campaign"] = self.campaign
 
             if self.traffic_light_protocol:
-                domain_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                domain_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.threat_types:
-                domain_context['ThreatTypes'] = self.create_context_table(self.threat_types)
+                domain_context["ThreatTypes"] = self.create_context_table(self.threat_types)
 
             if self.community_notes:
-                domain_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                domain_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.publications:
-                domain_context['Publications'] = self.create_context_table(self.publications)
+                domain_context["Publications"] = self.create_context_table(self.publications)
 
             if self.geo_location or self.geo_country or self.geo_description:
-                domain_context['Geo'] = {}
+                domain_context["Geo"] = {}
                 if self.geo_location:
-                    domain_context['Geo']['Location'] = self.geo_location
+                    domain_context["Geo"]["Location"] = self.geo_location
                 if self.geo_country:
-                    domain_context['Geo']['Country'] = self.geo_country
+                    domain_context["Geo"]["Country"] = self.geo_country
                 if self.geo_description:
-                    domain_context['Geo']['Description'] = self.geo_description
+                    domain_context["Geo"]["Description"] = self.geo_description
 
             if self.tech_country or self.tech_name or self.tech_organization or self.tech_email:
-                domain_context['Tech'] = {}
+                domain_context["Tech"] = {}
                 if self.tech_country:
-                    domain_context['Tech']['Country'] = self.tech_country
+                    domain_context["Tech"]["Country"] = self.tech_country
                 if self.tech_name:
-                    domain_context['Tech']['Name'] = self.tech_name
+                    domain_context["Tech"]["Name"] = self.tech_name
                 if self.tech_organization:
-                    domain_context['Tech']['Organization'] = self.tech_organization
+                    domain_context["Tech"]["Organization"] = self.tech_organization
                 if self.tech_email:
-                    domain_context['Tech']['Email'] = self.tech_email
+                    domain_context["Tech"]["Email"] = self.tech_email
 
             if self.billing:
-                domain_context['Billing'] = self.billing
+                domain_context["Billing"] = self.billing
 
             if whois_context:
-                domain_context['WHOIS'] = whois_context
+                domain_context["WHOIS"] = whois_context
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                domain_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                domain_context["Relationships"] = relationships_context
 
-            ret_value = {
-                Common.Domain.CONTEXT_PATH: domain_context
-            }
+            ret_value = {Common.Domain.CONTEXT_PATH: domain_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
 
             if self.dns_records:
-                domain_context['DNSRecords'] = self.create_context_table(self.dns_records)
+                domain_context["DNSRecords"] = self.create_context_table(self.dns_records)
 
             if self.stix_id:
-                domain_context['STIXID'] = self.stix_id
+                domain_context["STIXID"] = self.stix_id
 
             if self.description:
-                domain_context['Description'] = self.description
+                domain_context["Description"] = self.description
 
             if self.stix_id:
-                domain_context['Blocked'] = self.blocked
+                domain_context["Blocked"] = self.blocked
 
             if self.certificates:
-                domain_context['Certificates'] = self.create_context_table(self.certificates)
+                domain_context["Certificates"] = self.create_context_table(self.certificates)
 
             if self.rank:
-                domain_context['Rank'] = self.create_context_table(self.rank)
+                domain_context["Rank"] = self.create_context_table(self.rank)
 
             return ret_value
 
     class Endpoint(Indicator):
-        """ ignore docstring
+        """ignore docstring
         Endpoint indicator - https://xsoar.pan.dev/docs/integrations/context-standards-mandatory#endpoint
         """
-        # Compare by both ID and Vendor if both exist, otherwise just by ID.
-        CONTEXT_PATH = 'Endpoint(val.ID && val.ID == obj.ID && val.Vendor == obj.Vendor)'
 
-        def __init__(self, id, hostname=None, ip_address=None, domain=None, mac_address=None,
-                    os=None, os_version=None, dhcp_server=None, bios_version=None, model=None,
-                    memory=None, processors=None, processor=None, relationships=None, vendor=None, status=None,
-                    is_isolated=None):
+        # Compare by both ID and Vendor if both exist, otherwise just by ID.
+        CONTEXT_PATH = "Endpoint(val.ID && val.ID == obj.ID && val.Vendor == obj.Vendor)"
+
+        def __init__(
+            self,
+            id,
+            hostname=None,
+            ip_address=None,
+            domain=None,
+            mac_address=None,
+            os=None,
+            os_version=None,
+            dhcp_server=None,
+            bios_version=None,
+            model=None,
+            memory=None,
+            processors=None,
+            processor=None,
+            relationships=None,
+            vendor=None,
+            status=None,
+            is_isolated=None,
+        ):
             self.id = id
             self.hostname = hostname
             self.ip_address = ip_address
@@ -2894,68 +3107,66 @@ class Common(object):
             self.relationships = relationships
 
         def to_context(self):
-            endpoint_context = {
-                'ID': self.id
-            }
+            endpoint_context = {"ID": self.id}
 
             if self.hostname:
-                endpoint_context['Hostname'] = self.hostname
+                endpoint_context["Hostname"] = self.hostname
 
             if self.ip_address:
-                endpoint_context['IPAddress'] = self.ip_address
+                endpoint_context["IPAddress"] = self.ip_address
 
             if self.domain:
-                endpoint_context['Domain'] = self.domain
+                endpoint_context["Domain"] = self.domain
 
             if self.mac_address:
-                endpoint_context['MACAddress'] = self.mac_address
+                endpoint_context["MACAddress"] = self.mac_address
 
             if self.os:
-                endpoint_context['OS'] = self.os
+                endpoint_context["OS"] = self.os
 
             if self.os_version:
-                endpoint_context['OSVersion'] = self.os_version
+                endpoint_context["OSVersion"] = self.os_version
 
             if self.dhcp_server:
-                endpoint_context['DHCPServer'] = self.dhcp_server
+                endpoint_context["DHCPServer"] = self.dhcp_server
 
             if self.bios_version:
-                endpoint_context['BIOSVersion'] = self.bios_version
+                endpoint_context["BIOSVersion"] = self.bios_version
 
             if self.model:
-                endpoint_context['Model'] = self.model
+                endpoint_context["Model"] = self.model
 
             if self.memory:
-                endpoint_context['Memory'] = self.memory
+                endpoint_context["Memory"] = self.memory
 
             if self.processors:
-                endpoint_context['Processors'] = self.processors
+                endpoint_context["Processors"] = self.processors
 
             if self.processor:
-                endpoint_context['Processor'] = self.processor
+                endpoint_context["Processor"] = self.processor
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                endpoint_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                endpoint_context["Relationships"] = relationships_context
 
             if self.vendor:
-                endpoint_context['Vendor'] = self.vendor
+                endpoint_context["Vendor"] = self.vendor
 
             if self.status:
                 if self.status not in ENDPOINT_STATUS_OPTIONS:
-                    raise ConnectorError('Status does not have a valid value such as: Online or Offline')
-                endpoint_context['Status'] = self.status
+                    raise ConnectorError("Status does not have a valid value such as: Online or Offline")
+                endpoint_context["Status"] = self.status
 
             if self.is_isolated:
                 if self.is_isolated not in ENDPOINT_ISISOLATED_OPTIONS:
-                    raise ConnectorError('Is Isolated does not have a valid value such as: Yes, No, Pending'
-                                    ' isolation or Pending unisolation')
-                endpoint_context['IsIsolated'] = self.is_isolated
+                    raise ConnectorError(
+                        "Is Isolated does not have a valid value such as: Yes, No, Pending" " isolation or Pending unisolation"
+                    )
+                endpoint_context["IsIsolated"] = self.is_isolated
 
-            ret_value = {
-                Common.Endpoint.CONTEXT_PATH: endpoint_context
-            }
+            ret_value = {Common.Endpoint.CONTEXT_PATH: endpoint_context}
 
             return ret_value
 
@@ -2993,14 +3204,42 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'Account(val.id && val.id == obj.id)'
 
-        def __init__(self, id=None, type=None, username=None, display_name=None, groups=None,
-                    domain=None, email_address=None, telephone_number=None, office=None, job_title=None,
-                    department=None, country=None, state=None, city=None, street=None, is_enabled=None,
-                    dbot_score=None, relationships=None, blocked=None, community_notes=None, creation_date=None,
-                    description=None, stix_id=None, tags=None, traffic_light_protocol=None, user_id=None,
-                    manager_email=None, manager_display_name=None, risk_level=None, **kwargs):
+        CONTEXT_PATH = "Account(val.id && val.id == obj.id)"
+
+        def __init__(
+            self,
+            id=None,
+            type=None,
+            username=None,
+            display_name=None,
+            groups=None,
+            domain=None,
+            email_address=None,
+            telephone_number=None,
+            office=None,
+            job_title=None,
+            department=None,
+            country=None,
+            state=None,
+            city=None,
+            street=None,
+            is_enabled=None,
+            dbot_score=None,
+            relationships=None,
+            blocked=None,
+            community_notes=None,
+            creation_date=None,
+            description=None,
+            stix_id=None,
+            tags=None,
+            traffic_light_protocol=None,
+            user_id=None,
+            manager_email=None,
+            manager_display_name=None,
+            risk_level=None,
+            **kwargs
+        ):
 
             self.id = id
             self.type = type
@@ -3033,7 +3272,7 @@ class Common(object):
             self.kwargs = kwargs
 
             if dbot_score and not isinstance(dbot_score, Common.DBotScore):
-                raise ConnectorError('dbot_score must be of type DBotScore')
+                raise ConnectorError("dbot_score must be of type DBotScore")
 
             self.dbot_score = dbot_score
 
@@ -3041,50 +3280,49 @@ class Common(object):
             account_context = {}
 
             if self.id:
-                account_context['ID'] = self.id
+                account_context["ID"] = self.id
 
             if self.type:
-                account_context['Type'] = self.type
+                account_context["Type"] = self.type
 
             if self.blocked:
-                account_context['Blocked'] = self.blocked
+                account_context["Blocked"] = self.blocked
 
             if self.creation_date:
-                account_context['CreationDate'] = self.creation_date
+                account_context["CreationDate"] = self.creation_date
 
-            irrelevent = ['CONTEXT_PATH', 'to_context', 'dbot_score', 'id', 'create_context_table', 'kwargs']
-            details = [detail for detail in dir(self) if not detail.startswith('__') and detail not in irrelevent]
+            irrelevent = ["CONTEXT_PATH", "to_context", "dbot_score", "id", "create_context_table", "kwargs"]
+            details = [detail for detail in dir(self) if not detail.startswith("__") and detail not in irrelevent]
 
             for detail in details:
                 if self.__getattribute__(detail) is not None:
-                    if detail == 'email_address':
-                        account_context['Email'] = {
-                            'Address': self.email_address
-                        }
-                    elif detail in ('manager_email_address', 'manager_display_name'):
-                        if 'Manager' not in account_context:
-                            account_context['Manager'] = {}
-                        if detail == 'manager_email_address':
-                            account_context['Manager']['Email'] = self.manager_email_address
-                        elif detail == 'manager_display_name':
-                            account_context['Manager']['DisplayName'] = self.manager_display_name
+                    if detail == "email_address":
+                        account_context["Email"] = {"Address": self.email_address}
+                    elif detail in ("manager_email_address", "manager_display_name"):
+                        if "Manager" not in account_context:
+                            account_context["Manager"] = {}
+                        if detail == "manager_email_address":
+                            account_context["Manager"]["Email"] = self.manager_email_address
+                        elif detail == "manager_display_name":
+                            account_context["Manager"]["DisplayName"] = self.manager_display_name
                     else:
-                        Detail = camelize_string(detail, '_')
+                        Detail = camelize_string(detail, "_")
                         account_context[Detail] = self.__getattribute__(detail)
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                account_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                account_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
             if self.relationships:
-                relationships_context = [relationship.to_context() for relationship in self.relationships if
-                                        relationship.to_context()]
-                account_context['Relationships'] = relationships_context
+                relationships_context = [
+                    relationship.to_context() for relationship in self.relationships if relationship.to_context()
+                ]
+                account_context["Relationships"] = relationships_context
 
             if self.community_notes:
-                account_context['CommunityNotes'] = self.create_context_table(self.community_notes)
+                account_context["CommunityNotes"] = self.create_context_table(self.community_notes)
 
             if self.kwargs:
                 for key, value in self.kwargs.items():
@@ -3093,12 +3331,11 @@ class Common(object):
                     else:
                         logger.debug(
                             'Skipping the addition of the "{key}" key to the account context as it already exists.'.format(
-                                key=key)
+                                key=key
+                            )
                         )
 
-            ret_value = {
-                Common.Account.CONTEXT_PATH: account_context
-            }
+            ret_value = {Common.Account.CONTEXT_PATH: account_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -3120,7 +3357,8 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'Cryptocurrency(val.Address && val.Address == obj.Address)'
+
+        CONTEXT_PATH = "Cryptocurrency(val.Address && val.Address == obj.Address)"
 
         def __init__(self, address, address_type, dbot_score):
             self.address = address
@@ -3129,20 +3367,15 @@ class Common(object):
             self.dbot_score = dbot_score
 
         def to_context(self):
-            crypto_context = {
-                'Address': self.address,
-                'AddressType': self.address_type
-            }
+            crypto_context = {"Address": self.address, "AddressType": self.address_type}
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                crypto_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                crypto_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
-            ret_value = {
-                Common.Cryptocurrency.CONTEXT_PATH: crypto_context
-            }
+            ret_value = {Common.Cryptocurrency.CONTEXT_PATH: crypto_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -3195,11 +3428,25 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'AttackPattern(val.value && val.value == obj.value)'
 
-        def __init__(self, stix_id, kill_chain_phases=None, first_seen_by_source=None, description=None,
-                    operating_system_refs=None, publications=None, mitre_id=None, tags=None,
-                    traffic_light_protocol=None, dbot_score=None, community_notes=None, external_references=None, value=None):
+        CONTEXT_PATH = "AttackPattern(val.value && val.value == obj.value)"
+
+        def __init__(
+            self,
+            stix_id,
+            kill_chain_phases=None,
+            first_seen_by_source=None,
+            description=None,
+            operating_system_refs=None,
+            publications=None,
+            mitre_id=None,
+            tags=None,
+            traffic_light_protocol=None,
+            dbot_score=None,
+            community_notes=None,
+            external_references=None,
+            value=None,
+        ):
 
             self.community_notes = community_notes
             self.description = description
@@ -3217,32 +3464,30 @@ class Common(object):
 
         def to_context(self):
             attack_pattern_context = {
-                'STIXID': self.stix_id,
+                "STIXID": self.stix_id,
                 "KillChainPhases": self.kill_chain_phases,
                 "FirstSeenBySource": self.first_seen_by_source,
-                'OperatingSystemRefs': self.operating_system_refs,
+                "OperatingSystemRefs": self.operating_system_refs,
                 "Publications": self.publications,
                 "MITREID": self.mitre_id,
                 "Value": self.value,
                 "Tags": self.tags,
-                "Description": self.description
+                "Description": self.description,
             }
 
             if self.external_references:
-                attack_pattern_context['ExternalReferences'] = self.create_context_table(self.external_references)
+                attack_pattern_context["ExternalReferences"] = self.create_context_table(self.external_references)
 
             if self.traffic_light_protocol:
-                attack_pattern_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                attack_pattern_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                attack_pattern_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                attack_pattern_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
-            ret_value = {
-                Common.AttackPattern.CONTEXT_PATH: attack_pattern_context
-            }
+            ret_value = {Common.AttackPattern.CONTEXT_PATH: attack_pattern_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -3298,6 +3543,7 @@ class Common(object):
             :return: None
             :rtype: ``None``
             """
+
             DSA = "DSA"
             RSA = "RSA"
             EC = "EC"
@@ -3309,7 +3555,7 @@ class Common(object):
                     Common.CertificatePublicKey.Algorithm.DSA,
                     Common.CertificatePublicKey.Algorithm.RSA,
                     Common.CertificatePublicKey.Algorithm.EC,
-                    Common.CertificatePublicKey.Algorithm.UNKNOWN
+                    Common.CertificatePublicKey.Algorithm.UNKNOWN,
                 )
 
         def __init__(
@@ -3324,11 +3570,11 @@ class Common(object):
             exponent=None,  # type: int
             x=None,  # type: str
             y=None,  # type: str
-            curve=None  # type: str
+            curve=None,  # type: str
         ):
 
             if not Common.CertificatePublicKey.Algorithm.is_valid_type(algorithm):
-                raise ConnectorError('algorithm must be of type Common.CertificatePublicKey.Algorithm enum')
+                raise ConnectorError("algorithm must be of type Common.CertificatePublicKey.Algorithm enum")
 
             self.algorithm = algorithm
             self.length = length
@@ -3343,35 +3589,32 @@ class Common(object):
             self.curve = curve
 
         def to_context(self):
-            publickey_context = {
-                'Algorithm': self.algorithm,
-                'Length': self.length
-            }
+            publickey_context = {"Algorithm": self.algorithm, "Length": self.length}
 
             if self.publickey:
-                publickey_context['PublicKey'] = self.publickey
+                publickey_context["PublicKey"] = self.publickey
 
             if self.algorithm == Common.CertificatePublicKey.Algorithm.DSA:
                 if self.p:
-                    publickey_context['P'] = self.p
+                    publickey_context["P"] = self.p
                 if self.q:
-                    publickey_context['Q'] = self.q
+                    publickey_context["Q"] = self.q
                 if self.g:
-                    publickey_context['G'] = self.g
+                    publickey_context["G"] = self.g
 
             elif self.algorithm == Common.CertificatePublicKey.Algorithm.RSA:
                 if self.modulus:
-                    publickey_context['Modulus'] = self.modulus
+                    publickey_context["Modulus"] = self.modulus
                 if self.exponent:
-                    publickey_context['Exponent'] = self.exponent
+                    publickey_context["Exponent"] = self.exponent
 
             elif self.algorithm == Common.CertificatePublicKey.Algorithm.EC:
                 if self.x:
-                    publickey_context['X'] = self.x
+                    publickey_context["X"] = self.x
                 if self.y:
-                    publickey_context['Y'] = self.y
+                    publickey_context["Y"] = self.y
                 if self.curve:
-                    publickey_context['Curve'] = self.curve
+                    publickey_context["Curve"] = self.curve
 
             elif self.algorithm == Common.CertificatePublicKey.Algorithm.UNKNOWN:
                 pass
@@ -3393,13 +3636,14 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        OTHERNAME = 'otherName'
-        RFC822NAME = 'rfc822Name'
-        DNSNAME = 'dNSName'
-        DIRECTORYNAME = 'directoryName'
-        UNIFORMRESOURCEIDENTIFIER = 'uniformResourceIdentifier'
-        IPADDRESS = 'iPAddress'
-        REGISTEREDID = 'registeredID'
+
+        OTHERNAME = "otherName"
+        RFC822NAME = "rfc822Name"
+        DNSNAME = "dNSName"
+        DIRECTORYNAME = "directoryName"
+        UNIFORMRESOURCEIDENTIFIER = "uniformResourceIdentifier"
+        IPADDRESS = "iPAddress"
+        REGISTEREDID = "registeredID"
 
         @staticmethod
         def is_valid_type(_type):
@@ -3410,26 +3654,21 @@ class Common(object):
                 Common.GeneralName.DIRECTORYNAME,
                 Common.GeneralName.UNIFORMRESOURCEIDENTIFIER,
                 Common.GeneralName.IPADDRESS,
-                Common.GeneralName.REGISTEREDID
+                Common.GeneralName.REGISTEREDID,
             )
 
         def __init__(
             self,
             gn_value,  # type: str
-            gn_type  # type: str
+            gn_type,  # type: str
         ):
             if not Common.GeneralName.is_valid_type(gn_type):
-                raise ConnectorError(
-                    'gn_type must be of type Common.GeneralName enum'
-                )
+                raise ConnectorError("gn_type must be of type Common.GeneralName enum")
             self.gn_type = gn_type
             self.gn_value = gn_value
 
         def to_context(self):
-            return {
-                'Type': self.gn_type,
-                'Value': self.gn_value
-            }
+            return {"Type": self.gn_type, "Value": self.gn_value}
 
         def get_value(self):
             return self.gn_value
@@ -3526,17 +3765,14 @@ class Common(object):
                 self,
                 gn=None,  # type: Optional[Common.GeneralName]
                 gn_type=None,  # type: Optional[str]
-                gn_value=None  # type: Optional[str]
+                gn_value=None,  # type: Optional[str]
             ):
                 if gn:
                     self.gn = gn
                 elif gn_type and gn_value:
-                    self.gn = Common.GeneralName(
-                        gn_value=gn_value,
-                        gn_type=gn_type
-                    )
+                    self.gn = Common.GeneralName(gn_value=gn_value, gn_type=gn_type)
                 else:
-                    raise ConnectorError('either GeneralName or gn_type/gn_value required to inizialize SubjectAlternativeName')
+                    raise ConnectorError("either GeneralName or gn_type/gn_value required to inizialize SubjectAlternativeName")
 
             def to_context(self):
                 return self.gn.to_context()
@@ -3566,7 +3802,7 @@ class Common(object):
                 self,
                 issuer=None,  # type: Optional[List[Common.GeneralName]]
                 serial_number=None,  # type: Optional[str]
-                key_identifier=None  # type: Optional[str]
+                key_identifier=None,  # type: Optional[str]
             ):
                 self.issuer = issuer
                 self.serial_number = serial_number
@@ -3576,7 +3812,7 @@ class Common(object):
                 authority_key_identifier_context = {}  # type: Dict[str, Any]
 
                 if self.issuer:
-                    authority_key_identifier_context['Issuer'] = self.issuer,
+                    authority_key_identifier_context["Issuer"] = (self.issuer,)
 
                 if self.serial_number:
                     authority_key_identifier_context["SerialNumber"] = self.serial_number
@@ -3611,7 +3847,7 @@ class Common(object):
                 full_name=None,  # type: Optional[List[Common.GeneralName]]
                 relative_name=None,  # type:  Optional[str]
                 crl_issuer=None,  # type: Optional[List[Common.GeneralName]]
-                reasons=None  # type: Optional[List[str]]
+                reasons=None,  # type: Optional[List[str]]
             ):
                 self.full_name = full_name
                 self.relative_name = relative_name
@@ -3649,15 +3885,13 @@ class Common(object):
             def __init__(
                 self,
                 policy_identifier,  # type: str
-                policy_qualifiers=None  # type: Optional[List[str]]
+                policy_qualifiers=None,  # type: Optional[List[str]]
             ):
                 self.policy_identifier = policy_identifier
                 self.policy_qualifiers = policy_qualifiers
 
             def to_context(self):
-                certificate_policies_context = {
-                    "PolicyIdentifier": self.policy_identifier
-                }  # type: Dict[str, Union[List, str]]
+                certificate_policies_context = {"PolicyIdentifier": self.policy_identifier}  # type: Dict[str, Union[List, str]]
 
                 if self.policy_qualifiers:
                     certificate_policies_context["PolicyQualifiers"] = self.policy_qualifiers
@@ -3682,16 +3916,13 @@ class Common(object):
             def __init__(
                 self,
                 access_method,  # type: str
-                access_location  # type: Common.GeneralName
+                access_location,  # type: Common.GeneralName
             ):
                 self.access_method = access_method
                 self.access_location = access_location
 
             def to_context(self):
-                return {
-                    "AccessMethod": self.access_method,
-                    "AccessLocation": self.access_location.to_context()
-                }
+                return {"AccessMethod": self.access_method, "AccessLocation": self.access_location.to_context()}
 
         class BasicConstraints(object):
             """
@@ -3711,15 +3942,13 @@ class Common(object):
             def __init__(
                 self,
                 ca,  # type: bool
-                path_length=None  # type: int
+                path_length=None,  # type: int
             ):
                 self.ca = ca
                 self.path_length = path_length
 
             def to_context(self):
-                basic_constraints_context = {
-                    "CA": self.ca
-                }  # type: Dict[str, Union[str, int]]
+                basic_constraints_context = {"CA": self.ca}  # type: Dict[str, Union[str, int]]
 
                 if self.path_length:
                     basic_constraints_context["PathLength"] = self.path_length
@@ -3755,6 +3984,7 @@ class Common(object):
                 :return: None
                 :rtype: ``None``
                 """
+
                 PRECERTIFICATE = "PreCertificate"
                 X509CERTIFICATE = "X509Certificate"
 
@@ -3762,7 +3992,7 @@ class Common(object):
                 def is_valid_type(_type):
                     return _type in (
                         Common.CertificateExtension.SignedCertificateTimestamp.EntryType.PRECERTIFICATE,
-                        Common.CertificateExtension.SignedCertificateTimestamp.EntryType.X509CERTIFICATE
+                        Common.CertificateExtension.SignedCertificateTimestamp.EntryType.X509CERTIFICATE,
                     )
 
             def __init__(
@@ -3770,11 +4000,11 @@ class Common(object):
                 entry_type,  # type: str
                 version,  # type: int
                 log_id,  # type: str
-                timestamp  # type: str
+                timestamp,  # type: str
             ):
                 if not Common.CertificateExtension.SignedCertificateTimestamp.EntryType.is_valid_type(entry_type):
                     raise ConnectorError(
-                        'entry_type must be of type Common.CertificateExtension.SignedCertificateTimestamp.EntryType enum'
+                        "entry_type must be of type Common.CertificateExtension.SignedCertificateTimestamp.EntryType enum"
                     )
 
                 self.entry_type = entry_type
@@ -3785,7 +4015,7 @@ class Common(object):
             def to_context(self):
                 timestamps_context = {}  # type: Dict[str, Any]
 
-                timestamps_context['Version'] = self.version
+                timestamps_context["Version"] = self.version
                 timestamps_context["LogId"] = self.log_id
                 timestamps_context["Timestamp"] = self.timestamp
                 timestamps_context["EntryType"] = self.entry_type
@@ -3800,6 +4030,7 @@ class Common(object):
             :return: None
             :rtype: ``None``
             """
+
             SUBJECTALTERNATIVENAME = "SubjectAlternativeName"
             AUTHORITYKEYIDENTIFIER = "AuthorityKeyIdentifier"
             SUBJECTKEYIDENTIFIER = "SubjectKeyIdentifier"
@@ -3827,7 +4058,7 @@ class Common(object):
                     Common.CertificateExtension.ExtensionType.BASICCONSTRAINTS,
                     Common.CertificateExtension.ExtensionType.SIGNEDCERTIFICATETIMESTAMPS,
                     Common.CertificateExtension.ExtensionType.PRESIGNEDCERTIFICATETIMESTAMPS,
-                    Common.CertificateExtension.ExtensionType.OTHER  # for extensions that are not handled explicitly
+                    Common.CertificateExtension.ExtensionType.OTHER,  # for extensions that are not handled explicitly
                 )
 
         def __init__(
@@ -3852,10 +4083,10 @@ class Common(object):
             authority_information_access=None,  # type: Optional[List[Common.CertificateExtension.AuthorityInformationAccess]]
             basic_constraints=None,  # type: Optional[Common.CertificateExtension.BasicConstraints]
             signed_certificate_timestamps=None,  # type: Optional[List[Common.CertificateExtension.SignedCertificateTimestamp]]
-            value=None  # type: Optional[Union[str, List[Any], Dict[str, Any]]]
+            value=None,  # type: Optional[Union[str, List[Any], Dict[str, Any]]]
         ):
             if not Common.CertificateExtension.ExtensionType.is_valid_type(extension_type):
-                raise ConnectorError('algorithm must be of type Common.CertificateExtension.ExtensionType enum')
+                raise ConnectorError("algorithm must be of type Common.CertificateExtension.ExtensionType enum")
 
             self.extension_type = extension_type
             self.critical = critical
@@ -3867,7 +4098,7 @@ class Common(object):
 
             elif self.extension_type == Common.CertificateExtension.ExtensionType.SUBJECTKEYIDENTIFIER:
                 if not digest:
-                    raise ConnectorError('digest is mandatory for SubjectKeyIdentifier extension')
+                    raise ConnectorError("digest is mandatory for SubjectKeyIdentifier extension")
                 self.digest = digest
                 self.oid = "2.5.29.14"
                 self.extension_name = "subjectKeyIdentifier"
@@ -3885,7 +4116,7 @@ class Common(object):
 
             elif self.extension_type == Common.CertificateExtension.ExtensionType.EXTENDEDKEYUSAGE:
                 if not usages:
-                    raise ConnectorError('usages is mandatory for ExtendedKeyUsage extension')
+                    raise ConnectorError("usages is mandatory for ExtendedKeyUsage extension")
                 self.usages = usages
                 self.oid = "2.5.29.37"
                 self.extension_name = "extendedKeyUsage"
@@ -3935,11 +4166,7 @@ class Common(object):
                 self.extension_name = extension_name
 
         def to_context(self):
-            extension_context = {
-                "OID": self.oid,
-                "Name": self.extension_name,
-                "Critical": self.critical
-            }  # type: Dict[str, Any]
+            extension_context = {"OID": self.oid, "Name": self.extension_name, "Critical": self.critical}  # type: Dict[str, Any]
 
             if (
                 self.extension_type == Common.CertificateExtension.ExtensionType.SUBJECTALTERNATIVENAME
@@ -3954,12 +4181,9 @@ class Common(object):
                 extension_context["Value"] = self.authority_key_identifier.to_context()
 
             elif (
-                self.extension_type == Common.CertificateExtension.ExtensionType.SUBJECTKEYIDENTIFIER
-                and self.digest is not None
+                self.extension_type == Common.CertificateExtension.ExtensionType.SUBJECTKEYIDENTIFIER and self.digest is not None
             ):
-                extension_context["Value"] = {
-                    "Digest": self.digest
-                }
+                extension_context["Value"] = {"Digest": self.digest}
 
             elif self.extension_type == Common.CertificateExtension.ExtensionType.KEYUSAGE:
                 key_usage = {}  # type: Dict[str, bool]
@@ -3981,13 +4205,8 @@ class Common(object):
                 if key_usage:
                     extension_context["Value"] = key_usage
 
-            elif (
-                self.extension_type == Common.CertificateExtension.ExtensionType.EXTENDEDKEYUSAGE
-                and self.usages is not None
-            ):
-                extension_context["Value"] = {
-                    "Usages": [u for u in self.usages]
-                }
+            elif self.extension_type == Common.CertificateExtension.ExtensionType.EXTENDEDKEYUSAGE and self.usages is not None:
+                extension_context["Value"] = {"Usages": [u for u in self.usages]}
 
             elif (
                 self.extension_type == Common.CertificateExtension.ExtensionType.CRLDISTRIBUTIONPOINTS
@@ -4014,18 +4233,16 @@ class Common(object):
                 extension_context["Value"] = self.basic_constraints.to_context()
 
             elif (
-                self.extension_type in [
+                self.extension_type
+                in [
                     Common.CertificateExtension.ExtensionType.SIGNEDCERTIFICATETIMESTAMPS,
-                    Common.CertificateExtension.ExtensionType.PRESIGNEDCERTIFICATETIMESTAMPS
+                    Common.CertificateExtension.ExtensionType.PRESIGNEDCERTIFICATETIMESTAMPS,
                 ]
                 and self.signed_certificate_timestamps is not None
             ):
                 extension_context["Value"] = [sct.to_context() for sct in self.signed_certificate_timestamps]
 
-            elif (
-                self.extension_type == Common.CertificateExtension.ExtensionType.OTHER
-                and self.value is not None
-            ):
+            elif self.extension_type == Common.CertificateExtension.ExtensionType.OTHER and self.value is not None:
                 extension_context["Value"] = self.value
 
             return extension_context
@@ -4093,8 +4310,11 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'Certificate(val.MD5 && val.MD5 == obj.MD5 || val.SHA1 && val.SHA1 == obj.SHA1 || ' \
-                        'val.SHA256 && val.SHA256 == obj.SHA256 || val.SHA512 && val.SHA512 == obj.SHA512)'
+
+        CONTEXT_PATH = (
+            "Certificate(val.MD5 && val.MD5 == obj.MD5 || val.SHA1 && val.SHA1 == obj.SHA1 || "
+            "val.SHA256 && val.SHA256 == obj.SHA256 || val.SHA512 && val.SHA512 == obj.SHA512)"
+        )
 
         def __init__(
             self,
@@ -4113,11 +4333,9 @@ class Common(object):
             spki_sha256=None,  # type: Optional[str]
             signature_algorithm=None,  # type: Optional[str]
             signature=None,  # type: Optional[str]
-            subject_alternative_name=None, \
-            # type: Optional[List[Union[str,Dict[str, str],Common.CertificateExtension.SubjectAlternativeName]]]
+            subject_alternative_name=None,  # type: Optional[List[Union[str,Dict[str, str],Common.CertificateExtension.SubjectAlternativeName]]]
             extensions=None,  # type: Optional[List[Common.CertificateExtension]]
-            pem=None  # type: Optional[str]
-
+            pem=None,  # type: Optional[str]
         ):
 
             self.subject_dn = subject_dn
@@ -4130,7 +4348,7 @@ class Common(object):
                 elif isinstance(name, list):
                     self.name = name
                 else:
-                    raise ConnectorError('certificate name must be of type str or List[str]')
+                    raise ConnectorError("certificate name must be of type str or List[str]")
 
             self.issuer_dn = issuer_dn
             self.serial_number = serial_number
@@ -4143,7 +4361,7 @@ class Common(object):
             self.md5 = md5
 
             if publickey and not isinstance(publickey, Common.CertificatePublicKey):
-                raise ConnectorError('publickey must be of type Common.CertificatePublicKey')
+                raise ConnectorError("publickey must be of type Common.CertificatePublicKey")
             self.publickey = publickey
 
             self.spki_sha256 = spki_sha256
@@ -4160,10 +4378,11 @@ class Common(object):
                     isinstance(san, str)
                     or isinstance(san, dict)
                     or isinstance(san, Common.CertificateExtension.SubjectAlternativeName)
-                    for san in subject_alternative_name)
+                    for san in subject_alternative_name
+                )
             ):
                 raise ConnectorError(
-                    'subject_alternative_name must be list of str or Common.CertificateExtension.SubjectAlternativeName'
+                    "subject_alternative_name must be list of str or Common.CertificateExtension.SubjectAlternativeName"
                 )
             self.subject_alternative_name = subject_alternative_name
 
@@ -4172,29 +4391,25 @@ class Common(object):
                 and not isinstance(extensions, list)
                 and any(isinstance(e, Common.CertificateExtension) for e in extensions)  # type: ignore
             ):
-                raise ConnectorError('extensions must be of type List[Common.CertificateExtension]')
+                raise ConnectorError("extensions must be of type List[Common.CertificateExtension]")
             self.extensions = extensions
 
             self.pem = pem
 
             if not isinstance(dbot_score, Common.DBotScore):
-                raise ConnectorError('dbot_score must be of type DBotScore')
+                raise ConnectorError("dbot_score must be of type DBotScore")
 
         def to_context(self):
-            certificate_context = {
-                "SubjectDN": self.subject_dn
-            }  # type: Dict[str, Any]
+            certificate_context = {"SubjectDN": self.subject_dn}  # type: Dict[str, Any]
 
             san_list = []  # type: List[Dict[str, str]]
             if self.subject_alternative_name:
                 for san in self.subject_alternative_name:
                     if isinstance(san, str):
-                        san_list.append({
-                            'Value': san
-                        })
+                        san_list.append({"Value": san})
                     elif isinstance(san, dict):
                         san_list.append(san)
-                    elif (isinstance(san, Common.CertificateExtension.SubjectAlternativeName)):
+                    elif isinstance(san, Common.CertificateExtension.SubjectAlternativeName):
                         san_list.append(san.to_context())
 
             elif self.extensions:  # autogenerate it from extensions
@@ -4207,7 +4422,7 @@ class Common(object):
                             san_list.append(san.to_context())
 
             if san_list:
-                certificate_context['SubjectAlternativeName'] = san_list
+                certificate_context["SubjectAlternativeName"] = san_list
 
             if self.name:
                 certificate_context["Name"] = self.name
@@ -4215,26 +4430,26 @@ class Common(object):
                 name = set()  # type: Set[str]
                 # add subject alternative names
                 if san_list:
-                    name = set([
-                        sn['Value'] for sn in san_list
-                        if (
-                            'Value' in sn
-                            and (
-                                'Type' not in sn
-                                or sn['Type'] in (Common.GeneralName.DNSNAME, Common.GeneralName.IPADDRESS)
+                    name = set(
+                        [
+                            sn["Value"]
+                            for sn in san_list
+                            if (
+                                "Value" in sn
+                                and ("Type" not in sn or sn["Type"] in (Common.GeneralName.DNSNAME, Common.GeneralName.IPADDRESS))
                             )
-                        )
-                    ])
+                        ]
+                    )
 
                 # subject_dn is RFC4515 escaped
                 # replace \, and \+ with the long escaping \2c and \2b
                 long_escaped_subject_dn = self.subject_dn.replace("\\,", "\\2c")
                 long_escaped_subject_dn = long_escaped_subject_dn.replace("\\+", "\\2b")
                 # we then split RDN (separated by ,) and multi-valued RDN (sep by +)
-                rdns = long_escaped_subject_dn.replace('+', ',').split(',')
-                cn = next((rdn for rdn in rdns if rdn.startswith('CN=')), None)
+                rdns = long_escaped_subject_dn.replace("+", ",").split(",")
+                cn = next((rdn for rdn in rdns if rdn.startswith("CN=")), None)
                 if cn:
-                    name.add(cn.split('=', 1)[-1])
+                    name.add(cn.split("=", 1)[-1])
 
                 if name:
                     certificate_context["Name"] = sorted(list(name))
@@ -4284,14 +4499,12 @@ class Common(object):
                 certificate_context["PEM"] = self.pem
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                certificate_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                certificate_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
-            ret_value = {
-                Common.Certificate.CONTEXT_PATH: certificate_context
-            }
+            ret_value = {Common.Certificate.CONTEXT_PATH: certificate_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
@@ -4338,10 +4551,23 @@ class Common(object):
         :return: None
         :rtype: ``None``
         """
-        CONTEXT_PATH = 'Tactic(val.Name && val.Name == obj.Name)'
 
-        def __init__(self, stix_id, first_seen_by_source=None, description=None, publications=None, mitre_id=None, tags=None,
-                    traffic_light_protocol=None, dbot_score=None, community_notes=None, external_references=None, value=None):
+        CONTEXT_PATH = "Tactic(val.Name && val.Name == obj.Name)"
+
+        def __init__(
+            self,
+            stix_id,
+            first_seen_by_source=None,
+            description=None,
+            publications=None,
+            mitre_id=None,
+            tags=None,
+            traffic_light_protocol=None,
+            dbot_score=None,
+            community_notes=None,
+            external_references=None,
+            value=None,
+        ):
 
             self.community_notes = community_notes
             self.description = description
@@ -4357,30 +4583,28 @@ class Common(object):
 
         def to_context(self):
             attack_pattern_context = {
-                'STIXID': self.stix_id,
+                "STIXID": self.stix_id,
                 "FirstSeenBySource": self.first_seen_by_source,
                 "Publications": self.publications,
                 "MITREID": self.mitre_id,
                 "Value": self.value,
                 "Tags": self.tags,
-                "Description": self.description
+                "Description": self.description,
             }
 
             if self.external_references:
-                attack_pattern_context['ExternalReferences'] = self.create_context_table(self.external_references)
+                attack_pattern_context["ExternalReferences"] = self.create_context_table(self.external_references)
 
             if self.traffic_light_protocol:
-                attack_pattern_context['TrafficLightProtocol'] = self.traffic_light_protocol
+                attack_pattern_context["TrafficLightProtocol"] = self.traffic_light_protocol
 
             if self.dbot_score and self.dbot_score.score == Common.DBotScore.BAD:
-                attack_pattern_context['Malicious'] = {
-                    'Vendor': self.dbot_score.integration_name,
-                    'Description': self.dbot_score.malicious_description
+                attack_pattern_context["Malicious"] = {
+                    "Vendor": self.dbot_score.integration_name,
+                    "Description": self.dbot_score.malicious_description,
                 }
 
-            ret_value = {
-                Common.AttackPattern.CONTEXT_PATH: attack_pattern_context
-            }
+            ret_value = {Common.AttackPattern.CONTEXT_PATH: attack_pattern_context}
 
             if self.dbot_score:
                 ret_value.update(self.dbot_score.to_context())
