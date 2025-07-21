@@ -1,0 +1,90 @@
+{
+    "name": "oletools",
+    "version": "1.0.0",
+    "label": "OLETools",
+    "description": "This is an automation to run oletools malware analysis for office files. Oletools is a tool for analyzing Microsoft OLE2 files, such as Microsoft Office documents or Outlook messages, mainly for malware analysis, forensics, and debugging. This automation allows performing some basic oletools commands from Cortex XSOAR. Note that oletools is open source code and is subject to change.",
+    "publisher": "Fortinet D-Team",
+    "icon_small_name": "680.png",
+    "icon_large_name": "680.png",
+    "category": [
+        "Utilities"
+    ],
+    "configuration": {
+        "fields": []
+    },
+    "operations": [
+        {
+            "TEMPLATE_NOTE5": "--ADD OPERATION METADATA--",
+            "operation": "oletools_run",
+            "title": "run",
+            "description": "This is an automation to run oletools malware analysis for office files. Oletools is a tool for analyzing Microsoft OLE2 files, such as Microsoft Office documents or Outlook messages, mainly for malware analysis, forensics, and debugging. This automation allows performing some basic oletools commands from Cortex XSOAR. Note that oletools is open source code and is subject to change.",
+            "enabled": true,
+            "category": "utilities",
+            "annotation": "",
+            "TEMPLATE_NOTE6": "--OUTPUT SCHEMA IS A SAMPLE RESPONSE FROM THIS CONNECTOR ACTION--",
+            "output_schema": {
+                "result": "",
+                "api_data": ""
+            },
+            "TEMPLATE_NOTE7": "--PARAMETERS FOR THIS OPERATION--",
+            "parameters": [
+                {
+                    "title": "ole command",
+                    "type": "select",
+                    "name": "oleCommand",
+                    "required": true,
+                    "visible": true,
+                    "editable": true,
+                    "value": null,
+                    "tooltip": "The ole command to activate. oleid - to analyze OLE files to detect specific characteristics usually found in malicious files. oleobj - to extract embedded objects from OLE files. olevba - to extract and analyze VBA Macro source code from MS Office docume",
+                    "options": [
+                        "oleid",
+                        "oleobj",
+                        "olevba"
+                    ]
+                },
+                {
+                    "title": "entryID",
+                    "type": "text",
+                    "name": "entryID",
+                    "required": true,
+                    "visible": true,
+                    "editable": true,
+                    "value": "",
+                    "tooltip": "The file to activate the oletools analysis on."
+                },
+                {
+                    "title": "decode",
+                    "type": "checkbox",
+                    "name": "decode",
+                    "required": false,
+                    "visible": true,
+                    "editable": true,
+                    "value": false,
+                    "tooltip": "Display all the obfuscated strings with their decoded content (Hex, Base64, StrReverse, Dridex, VBA). Note that this works only with the olevba command."
+                },
+                {
+                    "title": "password",
+                    "type": "text",
+                    "name": "password",
+                    "required": false,
+                    "visible": true,
+                    "editable": true,
+                    "value": null,
+                    "tooltip": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter)."
+                },
+                {
+                    "title": "non secret password",
+                    "type": "text",
+                    "name": "nonSecretPassword",
+                    "required": false,
+                    "visible": true,
+                    "editable": true,
+                    "value": "",
+                    "tooltip": "If encrypted office files are encountered, try decryption with this password. This argument is non secret for playbook flows. (if specified dont specify the password parameter)."
+                }
+            ],
+            "open": false
+        }
+    ]
+}
