@@ -1,0 +1,135 @@
+{
+  "name": "oletools",
+  "version": "1.0.0",
+  "label": "OLETools",
+  "description": "OLEtools is a suite of Python tools used for analyzing Microsoft OLE2 files (also known as Structured Storage, Compound File Binary Format, or Microsoft Office documents such as .doc, .xls, .ppt, and .msg). It is particularly popular in digital forensics, malware analysis, and incident response for examining potentially malicious Office documents.",
+  "publisher": "Fortinet CSE",
+  "cs_approved": false,
+  "cs_compatible": true,
+  "contributor": "Daehyeob Kim",
+  "help_online": "https://github.com/fortinet-fortisoar/connector-oletools/blob/release/1.0.0/docs/readme.md",
+  "icon_large_name": "large.png",
+  "icon_small_name": "small.png",
+  "category": [
+    "Digital Forensics & Incident Response"
+  ],
+  "configuration": {},
+  "is_config_required": false,
+  "operations": [
+    {
+      "title": "Oleid",
+      "operation": "oleid",
+      "description": "Scans OLE files for indicators of potential malicious activity (e.g., macros, encryption).",
+      "enabled": true,
+      "category": "investigation",
+      "annotation": "oleid",
+      "parameters": [
+        {
+          "title": "File IRI",
+          "description": "Specify the file IRI to activate the oletools analysis on.",
+          "type": "text",
+          "name": "file_iri",
+          "required": true,
+          "visible": true,
+          "editable": true,
+          "tooltip": "Specify the file IRI to activate the oletools analysis on."
+        },
+        {
+          "title": "File Password",
+          "description": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter).",
+          "type": "text",
+          "name": "file_password",
+          "required": false,
+          "visible": true,
+          "editable": true,
+          "tooltip": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter)."
+        }
+      ],
+      "output_schema": {}
+    },
+    {
+      "title": "Oleobj",
+      "operation": "oleobj",
+      "description": "Extracts embedded OLE objects (like files or links) from documents.",
+      "enabled": true,
+      "category": "investigation",
+      "annotation": "oleobj",
+      "parameters": [
+        {
+          "title": "File IRI",
+          "description": "Specify the file IRI to activate the oletools analysis on.",
+          "type": "text",
+          "name": "file_iri",
+          "required": true,
+          "visible": true,
+          "editable": true,
+          "tooltip": "Specify the file IRI to activate the oletools analysis on."
+        },
+        {
+          "title": "File Password",
+          "description": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter).",
+          "type": "text",
+          "name": "file_password",
+          "required": false,
+          "visible": true,
+          "editable": true,
+          "tooltip": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter)."
+        }
+      ],
+      "output_schema": {}
+    },
+    {
+      "title": "Olevba",
+      "operation": "olevba",
+      "description": "Extracts and analyzes VBA macros from Office documents; detects auto-executable macros and suspicious keywords.",
+      "enabled": true,
+      "category": "investigation",
+      "annotation": "olevba",
+      "parameters": [
+        {
+          "title": "File IRI",
+          "description": "Specify the file IRI to activate the oletools analysis on.",
+          "type": "text",
+          "name": "file_iri",
+          "required": true,
+          "visible": true,
+          "editable": true,
+          "tooltip": "Specify the file IRI to activate the oletools analysis on."
+        },
+        {
+          "title": "File Password",
+          "description": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter).",
+          "type": "text",
+          "name": "file_password",
+          "required": false,
+          "visible": true,
+          "editable": true,
+          "tooltip": "If encrypted office files are encountered, try decryption with this password. (if specified dont specify the non_secret_password parameter)."
+        },
+        {
+          "title": "Show Decoded Strings",
+          "description": "If selected, hex-encoded strings will be displayed with their decoded content. By default, it set as \"False\".",
+          "type": "checkbox",
+          "name": "show_decoded_strings",
+          "required": false,
+          "visible": true,
+          "editable": true,
+          "tooltip": "If selected, hex-encoded strings will be displayed with their decoded content. By default, it set as \"False\".",
+          "value": false
+        },
+        {
+          "title": "Deobfuscate",
+          "description": "If selected, attempt to deobfuscate VBA expressions (slow). By default, it set as \"False\".",
+          "type": "checkbox",
+          "name": "deobfuscate",
+          "required": false,
+          "visible": true,
+          "editable": true,
+          "tooltip": "If selected, attempt to deobfuscate VBA expressions (slow). By default, it set as \"False\".",
+          "value": false
+        }
+      ],
+      "output_schema": {}
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "type": "workflow_collections",
+  "data": [
+    {
+      "uuid": "0b3f714a-eb54-453e-90d3-6e43440a6543",
+      "@type": "WorkflowCollection",
+      "workflows": [
+        {
+          "@type": "Workflow",
+          "uuid": "a8679019-5338-490a-a3c4-6640adf41d4a",
+          "collection": "/api/3/workflow_collections/0b3f714a-eb54-453e-90d3-6e43440a6543",
+          "steps": [
+            {
+              "uuid": "113e721b-a9ce-43cf-a79c-c34855824df6",
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  }
+                }
+              },
+              "left": "20",
+              "top": "20",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62"
+            },
+            {
+              "uuid": "60024967-c38f-4acf-b78c-4931cdafb9ca",
+              "@type": "WorkflowStep",
+              "name": "Oleid",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "name": "OLETools",
+                "config": "",
+                "params": {
+                  "file_iri": "",
+                  "file_password": ""
+                },
+                "version": "1.0.0",
+                "connector": "oletools",
+                "operation": "oleid",
+                "operationTitle": "Oleid"
+              },
+              "left": "188",
+              "top": "120",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671"
+            }
+          ],
+          "triggerLimit": null,
+          "description": "Scans OLE files for indicators of potential malicious activity (e.g., macros, encryption).",
+          "name": "Oleid",
+          "tag": "#OLETools",
+          "recordTags": [
+            "Oletools",
+            "oletools"
+          ],
+          "isActive": false,
+          "debug": false,
+          "singleRecordExecution": false,
+          "parameters": [],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/113e721b-a9ce-43cf-a79c-c34855824df6",
+          "routes": [
+            {
+              "uuid": "e5835298-cd88-4f49-8830-49f615a99cdd",
+              "@type": "WorkflowRoute",
+              "label": null,
+              "isExecuted": false,
+              "name": "Start-> Oleid",
+              "sourceStep": "/api/3/workflow_steps/113e721b-a9ce-43cf-a79c-c34855824df6",
+              "targetStep": "/api/3/workflow_steps/60024967-c38f-4acf-b78c-4931cdafb9ca"
+            }
+          ]
+        },
+        {
+          "@type": "Workflow",
+          "uuid": "5a58a10c-768e-4268-a8b5-a20c0c9a18e2",
+          "collection": "/api/3/workflow_collections/0b3f714a-eb54-453e-90d3-6e43440a6543",
+          "steps": [
+            {
+              "uuid": "b0d00b70-3a3e-4138-b090-c5c53c7a1daf",
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  }
+                }
+              },
+              "left": "20",
+              "top": "20",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62"
+            },
+            {
+              "uuid": "a5d0b5df-1665-4866-ace0-4429baa8b5c0",
+              "@type": "WorkflowStep",
+              "name": "Oleobj",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "name": "OLETools",
+                "config": "",
+                "params": {
+                  "file_iri": "",
+                  "file_password": ""
+                },
+                "version": "1.0.0",
+                "connector": "oletools",
+                "operation": "oleobj",
+                "operationTitle": "Oleobj"
+              },
+              "left": "188",
+              "top": "120",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671"
+            }
+          ],
+          "triggerLimit": null,
+          "description": "Extracts embedded OLE objects (like files or links) from documents.",
+          "name": "Oleobj",
+          "tag": "#OLETools",
+          "recordTags": [
+            "Oletools",
+            "oletools"
+          ],
+          "isActive": false,
+          "debug": false,
+          "singleRecordExecution": false,
+          "parameters": [],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/b0d00b70-3a3e-4138-b090-c5c53c7a1daf",
+          "routes": [
+            {
+              "uuid": "b045e7e7-8521-4e7c-b1db-ff3672bf4caa",
+              "@type": "WorkflowRoute",
+              "label": null,
+              "isExecuted": false,
+              "name": "Start-> Oleobj",
+              "sourceStep": "/api/3/workflow_steps/b0d00b70-3a3e-4138-b090-c5c53c7a1daf",
+              "targetStep": "/api/3/workflow_steps/a5d0b5df-1665-4866-ace0-4429baa8b5c0"
+            }
+          ]
+        },
+        {
+          "@type": "Workflow",
+          "uuid": "657e26e4-a73a-48b8-8b62-ac051197d239",
+          "collection": "/api/3/workflow_collections/0b3f714a-eb54-453e-90d3-6e43440a6543",
+          "steps": [
+            {
+              "uuid": "2082b02f-5f3e-4f53-b9dc-5b3411a16ee4",
+              "@type": "WorkflowStep",
+              "name": "Start",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "step_variables": {
+                  "input": {
+                    "params": []
+                  }
+                }
+              },
+              "left": "20",
+              "top": "20",
+              "stepType": "/api/3/workflow_step_types/b348f017-9a94-471f-87f8-ce88b6a7ad62"
+            },
+            {
+              "uuid": "685f3c8c-8d8f-40e9-9725-7d8f9c613046",
+              "@type": "WorkflowStep",
+              "name": "Olevba",
+              "description": null,
+              "status": null,
+              "arguments": {
+                "name": "OLETools",
+                "config": "",
+                "params": {
+                  "file_iri": "",
+                  "file_password": "",
+                  "show_decoded_strings": "",
+                  "deobfuscate": ""
+                },
+                "version": "1.0.0",
+                "connector": "oletools",
+                "operation": "olevba",
+                "operationTitle": "Olevba"
+              },
+              "left": "188",
+              "top": "120",
+              "stepType": "/api/3/workflow_step_types/0bfed618-0316-11e7-93ae-92361f002671"
+            }
+          ],
+          "triggerLimit": null,
+          "description": "Extracts and analyzes VBA macros from Office documents; detects auto-executable macros and suspicious keywords.",
+          "name": "Olevba",
+          "tag": "#OLETools",
+          "recordTags": [
+            "Oletools",
+            "oletools"
+          ],
+          "isActive": false,
+          "debug": false,
+          "singleRecordExecution": false,
+          "parameters": [],
+          "synchronous": false,
+          "triggerStep": "/api/3/workflow_steps/2082b02f-5f3e-4f53-b9dc-5b3411a16ee4",
+          "routes": [
+            {
+              "uuid": "a121538e-c783-4b33-b56f-e9db15e165f4",
+              "@type": "WorkflowRoute",
+              "label": null,
+              "isExecuted": false,
+              "name": "Start-> Olevba",
+              "sourceStep": "/api/3/workflow_steps/2082b02f-5f3e-4f53-b9dc-5b3411a16ee4",
+              "targetStep": "/api/3/workflow_steps/685f3c8c-8d8f-40e9-9725-7d8f9c613046"
+            }
+          ]
+        }
+      ],
+      "name": "Sample - OLETools - 1.0.0",
+      "description": "OLEtools is a suite of Python tools used for analyzing Microsoft OLE2 files (also known as Structured Storage, Compound File Binary Format, or Microsoft Office documents such as .doc, .xls, .ppt, and .msg). It is particularly popular in digital forensics, malware analysis, and incident response for examining potentially malicious Office documents.",
+      "visible": true,
+      "recordTags": [
+        "Oletools",
+        "oletools"
+      ]
+    }
+  ]
+}
