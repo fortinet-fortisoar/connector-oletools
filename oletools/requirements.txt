@@ -1,1 +1,1 @@
-oletools[full]
+oletools==0.60.2
