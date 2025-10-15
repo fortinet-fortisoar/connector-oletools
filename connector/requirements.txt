@@ -1,6 +1,0 @@
-# Add Python Dependencies
-# Do hardcode library versions!
-# Sample dependencies below
-# requests
-# simplejson
-oletools[full]

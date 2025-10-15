@@ -1,3 +1,10 @@
+"""
+Copyright start
+MIT License
+Copyright (c) 2025 Fortinet Inc
+Copyright end
+"""
+
 import os
 import hashlib
 import subprocess
@@ -129,11 +136,11 @@ class CustomConnector:
         return self._make_jsonable(retval)
 
     def olevba(
-        self,
-        file_iri: str,
-        file_password: Optional[str] = "",
-        show_decoded_strings: bool = False,
-        deobfuscate: bool = False,
+            self,
+            file_iri: str,
+            file_password: Optional[str] = "",
+            show_decoded_strings: bool = False,
+            deobfuscate: bool = False,
     ) -> dict:
         """olevba is a script to parse OLE and OpenXML files such as MS Office documents.
         - API Doc: <https://github.com/decalage2/oletools/wiki/olevba>"""
